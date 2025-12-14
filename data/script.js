@@ -432,8 +432,20 @@ function updateChartDisplay() {
     
     // Limit to 7 points per view based on viewOffset
     const pointsPerView = 7;
-    const startIndex = Math.max(0, filtered.length - pointsPerView - (viewOffset * pointsPerView));
-    const endIndex = Math.max(pointsPerView, filtered.length - (viewOffset * pointsPerView));
+    
+    // When filters are active (date or time), start from beginning
+    // When no filters, show most recent data
+    let startIndex, endIndex;
+    if (currentDateFilter || currentTimeFrom || currentTimeTo) {
+        // Show from start of filtered data, paginate forward
+        startIndex = viewOffset * pointsPerView;
+        endIndex = startIndex + pointsPerView;
+    } else {
+        // Show most recent data, paginate backward
+        startIndex = Math.max(0, filtered.length - pointsPerView - (viewOffset * pointsPerView));
+        endIndex = Math.max(pointsPerView, filtered.length - (viewOffset * pointsPerView));
+    }
+    
     const viewData = filtered.slice(startIndex, endIndex);
     
     // Format labels as "MM/DD HH:MM:SS AM/PM"
@@ -501,12 +513,24 @@ function setupFilterListeners() {
 
     // Navigation buttons
     document.getElementById('navPrev').addEventListener('click', () => {
-        viewOffset += 1; // Go back 1 slide (7 points)
+        // When filters active: prev = earlier data (decrease offset if positive)
+        // When no filters: prev = older data (increase offset)
+        if (currentDateFilter || currentTimeFrom || currentTimeTo) {
+            viewOffset = Math.max(0, viewOffset - 1); // Go to earlier slide
+        } else {
+            viewOffset += 1; // Go to older data
+        }
         updateChartDisplay();
     });
 
     document.getElementById('navNext').addEventListener('click', () => {
-        viewOffset -= 1; // Go forward 1 slide (7 points)
+        // When filters active: next = later data (increase offset)
+        // When no filters: next = newer data (decrease offset, min 0)
+        if (currentDateFilter || currentTimeFrom || currentTimeTo) {
+            viewOffset += 1; // Go to later slide
+        } else {
+            viewOffset = Math.max(0, viewOffset - 1); // Go to newer data
+        }
         updateChartDisplay();
     });
 }
