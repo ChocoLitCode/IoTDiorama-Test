@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DomusLink</title>
+    <link rel="stylesheet" href="style.css">
+     <script>
+    /* authentication redirect */
+    if (localStorage.getItem("auth") !== "true") {
+        window.location.href = "login.html";
+    }
+    </script>
+</head>
+
+<body>
+
+<header>
+    <div class="header-title">
+        DomusLink
+        <div id="headerDateTime" style="font-size: 0.7em; font-weight: 400; opacity: 0.8; margin-top: 2px;"></div>
+    </div>
+
+    <div class="header-right">
+        <img id="graphToggle" class="header-btn" src="/assets/graph-icon.svg" alt="graph">
+        <img id="darkToggle" class="header-btn" src="/assets/dark-icon.svg" alt="dark mode">
+        <img id="notifToggle" class="header-btn" src="/assets/notif-icon.svg" alt="notifications">
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+    </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+    <!-- SENSOR READINGS AND CURRENT STATUS ON TOP -->
+    <div class="row two-col">
+        
+        <!-- SENSOR READINGS -->
+        <div class="column">
+            <div class="title">Sensor Readings</div>
+
+            <div class="sensor-grid-vertical">
+                <!-- HUMIDITY -->
+                <div class="sensor-card">
+                    <div class="sensor-label">Humidity</div>
+                    <div class="sensor-display">
+                        <p style="margin:0; font-weight:bold; padding-top: 35px; font-size: 24px;">
+                            <span id="humidity">0.0</span> %
+                        </p>
+                        <div style="font-size:12px; margin-top:8px;">
+                            Last: <span id="humidTime">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TEMPERATURE -->
+                <div class="sensor-card">
+                    <div class="sensor-label">Temperature</div>
+                    <div class="sensor-display">
+                        <p style="margin:0; font-weight:bold; padding-top: 35px; font-size: 24px;">
+                            <span id="temperature">0.0</span> °C
+                        </p>
+                        <div style="font-size:12px; margin-top:8px;">
+                            Last: <span id="tempTime">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOUND -->
+                <div class="sensor-card">
+                    <div class="sensor-label">Sound</div>
+                    <div class="sensor-display">
+                        <div style="margin-top: 40px;">
+                            <div id="soundBadge" class="sound-badge listening">Listening</div>
+                        </div>
+                        <div style="font-size:12px; margin-top:15px;">
+                            Last: <span id="soundTime">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CURRENT STATUS -->
+        <div class="column">
+            <div class="title">Current Status</div>
+
+            <div class="status-panel">
+                <div class="status-grid">
+
+                    <div class="state-box">Door</div>
+                    <div class="state-box inactive" id="doorState">LOCKED</div>
+
+                    <div class="state-box">Light 1</div>
+                    <div class="state-box inactive" id="light1State">Inactive</div>
+
+                    <div class="state-box">Light 2</div>
+                    <div class="state-box inactive" id="light2State">Inactive</div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- MANUAL CONTROLS AT BOTTOM -->
+    <div class="row" style="grid-template-columns: 1fr;">
+        <div class="column">
+            <div class="title">Manual Controls</div>
+
+            <div class="controls-grid">
+
+                <!-- ROOM 1 -->
+                <div class="control-card grouped-controls">
+
+                    <div class="control-title-small">Room 1 Light</div>
+
+                    <div class="control-row">
+                        <button id="room1On" class="manual-btn">ON</button>
+                        <button id="room1Off" class="manual-btn">OFF</button>
+                    </div>
+
+            
+                    <div class="state-section">
+                        <span class="state-label">State : <strong id="room1State">Auto</strong></span>
+                        <button id="room1Auto" class="manual-btn">AUTO</button>
+                    </div>
+
+                </div>
+
+                <!-- ROOM 2 -->
+                <div class="control-card grouped-controls">
+
+                    <div class="control-title-small">Room 2 Light</div>
+
+                    <div class="control-row">
+                        <button id="room2On" class="manual-btn">ON</button>
+                        <button id="room2Off" class="manual-btn">OFF</button>
+                    </div>
+
+        
+                    <div class="state-section">
+                        <span class="state-label">State : <strong id="room2State">Auto</strong></span>
+                        <button id="room2Auto" class="manual-btn">AUTO</button>
+                    </div>
+
+                </div>
+
+                <!-- DOOR CONTROL -->
+                <div class="control-card grouped-controls">
+
+                    <div class="control-title-small">Door Control</div>
+
+                    <div class="control-row">
+                        <button id="unlockDoorBtn" class="manual-btn">UNLOCK</button>
+                        <button id="lockDoorBtn" class="manual-btn">LOCK</button>
+                    </div>
+
+                </div>
+
+            </div> 
+        </div>
+    </div> 
+
+</div>
+
+
+
+<!-- NOTIFICATION SLIDER PANEL -->
+<div id="notifPanel" class="notif-panel">
+    <div class="notif-header">
+        <h2>Notifications</h2>
+        <div>
+            <button id="clearNotif" class="notif-clear">Clear</button>
+            <button id="notifClose" class="notif-close">X</button>
+        </div>
+    </div>
+    <div class="notif-content">
+        <div class="notif-item">No new notifications.</div>
+    </div>
+</div>
+
+<!-- GRAPH SLIDER PANEL WITH CHARTS -->
+<div id="graphPanel" class="graph-panel">
+    <div class="graph-title">
+        Graph & History
+        <button id="graphClose" class="graph-close">X</button>
+    </div>
+
+    <!-- Storage Info Note -->
+    <div style="padding: 10px 20px; background: rgba(255, 193, 7, 0.1); border-left: 4px solid #FFC107; margin: 10px 20px; border-radius: 4px; font-size: 13px;">
+        <strong>ℹ️ Note:</strong> Data is stored for the last 7 days only. Older data is automatically deleted.
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="graph-filters">
+        <div class="filter-row">
+            <span style="font-weight: bold; margin-right: 10px;">Date:</span>
+            <input type="date" id="dateFilter" class="time-input" style="width: auto;">
+            <button class="filter-btn" id="showAllDates">Show All</button>
+        </div>
+        <div class="filter-row">
+            <span style="font-weight: bold; margin-right: 10px;">Time:</span>
+            <label>From <input type="time" id="timeFrom" class="time-input" value="00:00"></label>
+            <label>To <input type="time" id="timeTo" class="time-input" value="23:59"></label>
+            <button id="applyTimeFilter" class="filter-btn">Apply</button>
+            <button id="resetFilter" class="filter-btn">Reset</button>
+        </div>
+    </div>
+
+    <!-- Combined Chart with Navigation -->
+    <div class="chart-container">
+        <button class="chart-nav-btn chart-nav-left" id="navPrev">&lt;</button>
+        <div class="chart-wrapper">
+            <div class="graph-box-title">Temperature & Humidity</div>
+            <canvas id="combinedChart"></canvas>
+        </div>
+        <button class="chart-nav-btn chart-nav-right" id="navNext">&gt;</button>
+    </div>
+</div>
+
+
+<!-- FOOTER -->
+<footer>
+    <button class="info-btn" onclick="toggleInfoPanel()">About Us</button>
+
+    <div id="infoPanel" class="info-panel">
+        <div class="info-header">
+            <span class="info-title">About Us</span>
+            <button class="info-close" onclick="toggleInfoPanel()">X</button>
+        </div>
+
+        <div class="info-content">
+            <div class="info-box">Trichelle Josol</div>
+            <div class="info-box">Ken Nathaneil Almeda</div>
+            <div class="info-box">Jerick Janaban</div>
+            <div class="info-box">Cathlea Talagon</div>
+            <div class="info-box">Kenneth Pagarigan</div>
+            <div class="info-box">Justin Salivio</div>
+        </div>
+    </div>
+</footer>
+
+<script src="chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

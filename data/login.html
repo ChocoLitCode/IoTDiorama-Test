@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DomusLink</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    @font-face{
+      font-family: 'ShareTech';
+      src: url('assets/ShareTech-Regular.ttf') format('truetype');
+    }
+
+    :root{
+      --bg:#f2f3ff;
+      --panel:#cdcaff;
+      --card-bg:#fff;
+      --text:#000;
+    }
+
+    html, body{
+      height:100%;
+      margin:0;
+      font-family:'ShareTech',sans-serif;
+      background:var(--bg);
+    }
+
+    .logo-card{
+      width:100vw;
+      height:100vh;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:40px;
+      box-sizing:border-box;
+      padding:40px 20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .logo-img{
+      width:700px;
+      height:320px;
+      object-fit:contain;
+      max-width:90%;
+    }
+
+    .login-container{
+      width:380px;
+      max-width:90%;
+      background:var(--panel);
+      padding:28px;
+      border:3px solid var(--text);
+      border-radius:16px;
+      text-align:center;
+      box-shadow:0 10px 30px rgba(0,0,0,0.2);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      box-sizing:border-box;
+      position:relative;
+      z-index:10;
+    }
+
+    .input-box{
+      background:var(--card-bg);
+      border:2px solid var(--text);
+      border-radius:12px;
+      padding:12px 14px;
+      width:100%;
+      font-size:15px;
+      text-align:center;
+      box-sizing:border-box;
+    }
+
+    .login-btn{
+      margin-top:6px;
+      background:var(--card-bg);
+      color:var(--text);
+      border:2px solid var(--text);
+      border-radius:12px;
+      padding:12px 20px;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s ease;
+      font-family:'ShareTech',sans-serif;
+    }
+
+    .login-btn:hover{
+      background:var(--text);
+      color:var(--card-bg);
+      box-shadow:0 6px 15px rgba(0,0,0,0.25);
+      transform:translateY(-2px);
+    }
+
+    .error{
+      color:red;
+      height:20px;
+      font-size:14px;
+    }
+
+    @media (max-width:900px){
+      .logo-img{
+        width:520px;
+        height:240px;
+      }
+      .login-container{
+        width:340px;
+      }
+    }
+
+    @media (max-width:600px){
+      .logo-card{
+        gap:20px;
+        padding:20px;
+      }
+
+      .logo-img{
+        width:280px;
+        height:140px;
+      }
+
+      .login-container{
+        width:100%;
+        max-width:300px;
+        padding:20px;
+      }
+
+      .input-box{
+        width:100%;
+        font-size:14px;
+        padding:10px;
+      }
+
+      .login-btn{
+        width:100%;
+        padding:10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-card">
+    <img class="logo-img" src="/assets/logo.png" alt="IoT Diorama logo" />
+
+    <div class="login-container">
+      <input id="user" class="input-box" placeholder="USERNAME" />
+      <input id="pass" type="password" class="input-box" placeholder="PASSWORD" />
+
+      <button class="login-btn" onclick="login()">Login</button>
+      <div id="error" class="error"></div>
+    </div>
+  </div>
+
+  <script>
+    const USERNAME = "admin";
+    const PASSWORD = "1234";
+
+    function login(){
+      const u = document.getElementById("user").value.trim();
+      const p = document.getElementById("pass").value.trim();
+      if(u === USERNAME && p === PASSWORD){
+        localStorage.setItem("auth","true");
+        window.location.href = "/";
+      } else {
+        document.getElementById("error").innerText = "Invalid username or password";
+      }
+    }
+  </script>
+</body>
+</html>
