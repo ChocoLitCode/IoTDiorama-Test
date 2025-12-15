@@ -215,8 +215,12 @@ void setup() {
         request->send(LittleFS, "/script.js", "application/javascript");
     });
     
-    server.on("/chart.umd.min.js", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(LittleFS, "/chart.umd.min.js", "application/javascript");
+    server.on("/chart.js", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/chart.js", "application/javascript");
+    });
+
+     server.on("/pouchdb.min.js", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(LittleFS, "/pouchdb.min.js", "application/javascript");
     });
     
     server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){

@@ -1,4 +1,112 @@
-// ===== LocalStorage Functions =====
+// ===== PouchDB Setup =====
+const pouchDB = new PouchDB('IoTDioramaDB');
+
+// Save all notifications to PouchDB
+async function saveNotificationsPouchDB() {
+    try {
+        const doc = {
+            _id: 'notifications',
+            data: notifications
+        };
+        
+        // Check if document exists
+        try {
+            const existing = await pouchDB.get('notifications');
+            doc._rev = existing._rev;
+        } catch (e) {
+            // Document doesn't exist, will create new one
+        }
+        
+        await pouchDB.put(doc);
+        console.log('Notifications saved to PouchDB');
+    } catch (e) {
+        console.error('Failed to save notifications to PouchDB:', e);
+    }
+}
+
+// Load all notifications from PouchDB
+async function loadNotificationsPouchDB() {
+    try {
+        const doc = await pouchDB.get('notifications');
+        return doc.data || [];
+    } catch (e) {
+        if (e.status === 404) {
+            console.log('No notifications found in PouchDB');
+            return [];
+        }
+        console.error('Failed to load notifications from PouchDB:', e);
+        return [];
+    }
+}
+
+// Save chart data to PouchDB
+async function saveChartDataPouchDB() {
+    try {
+        const doc = {
+            _id: 'chartData',
+            data: allChartData
+        };
+        
+        // Check if document exists
+        try {
+            const existing = await pouchDB.get('chartData');
+            doc._rev = existing._rev;
+        } catch (e) {
+            // Document doesn't exist, will create new one
+        }
+        
+        await pouchDB.put(doc);
+        console.log('Chart data saved to PouchDB');
+    } catch (e) {
+        console.error('Failed to save chart data to PouchDB:', e);
+    }
+}
+
+// Load chart data from PouchDB
+async function loadChartDataPouchDB() {
+    try {
+        const doc = await pouchDB.get('chartData');
+        return doc.data || [];
+    } catch (e) {
+        if (e.status === 404) {
+            console.log('No chart data found in PouchDB');
+            return [];
+        }
+        console.error('Failed to load chart data from PouchDB:', e);
+        return [];
+    }
+}
+
+// Save authentication to PouchDB
+async function saveAuthPouchDB(username, password) {
+    try {
+        await pouchDB.put({ _id: 'auth', username, password });
+        console.log('Auth saved to PouchDB');
+    } catch (e) {
+        if (e.status === 409) {
+            // Document exists, update
+            const doc = await pouchDB.get('auth');
+            doc.username = username;
+            doc.password = password;
+            await pouchDB.put(doc);
+            console.log('Auth updated in PouchDB');
+        } else {
+            console.error('Failed to save auth to PouchDB:', e);
+        }
+    }
+}
+
+// Load authentication from PouchDB
+async function loadAuthPouchDB() {
+    try {
+        return await pouchDB.get('auth');
+    } catch (e) {
+        console.error('Failed to load auth from PouchDB:', e);
+        return null;
+    }
+}
+
+// ===== LocalStorage Functions (for preferences only) =====
 function saveToLocalStorage(key, data) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
@@ -83,11 +191,11 @@ const room2StateTxt = document.getElementById("room2State");
 const light2State = document.getElementById("light2State");
 
 // ===== Notification System =====
-let notifications = loadFromLocalStorage('notifications', []);
+let notifications = [];
 let pendingNotifications = [];
 const MAX_NOTIFICATIONS = 20;
 
-function addNotification(type, message) {
+async function addNotification(type, message) {
     const timestamp = new Date().toLocaleString();
     const notification = {
         type: type,
@@ -109,7 +217,9 @@ function addNotification(type, message) {
     
     displayNotifications();
     updateNotificationBadge();
-    saveToLocalStorage('notifications', notifications);
+    
+    // Save to PouchDB
+    await saveNotificationsPouchDB();
 }
 
 function displayNotifications() {
@@ -181,7 +291,7 @@ function updateNotificationBadge() {
     }
 }
 
-function clearNotifications() {
+async function clearNotifications() {
     notifications = [];
     
     // Process pending notifications from queue
@@ -192,7 +302,9 @@ function clearNotifications() {
     
     displayNotifications();
     updateNotificationBadge();
-    saveToLocalStorage('notifications', notifications);
+    
+    // Save to PouchDB
+    await saveNotificationsPouchDB();
     
     if (pendingNotifications.length > 0) {
         alert(`${pendingNotifications.length} notification(s) still queued. Clear again to see more.`);
@@ -204,7 +316,7 @@ let chartsInitialized = false;
 let combinedChart;
 
 // Data storage with full timestamps (unlimited)
-let allChartData = loadFromLocalStorage('allChartData', []);
+let allChartData = [];
 
 // Filter state
 let currentDateFilter = null; // Specific date string or null for all
@@ -373,7 +485,7 @@ function initCharts() {
     updateChartDisplay();
 }
 
-function updateCharts(temp, humid) {
+async function updateCharts(temp, humid) {
     if (!chartsInitialized) return;
 
     const now = new Date();
@@ -391,8 +503,8 @@ function updateCharts(temp, humid) {
     const sevenDaysAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
     allChartData = allChartData.filter(d => d.timestamp >= sevenDaysAgo);
 
-    // Save to localStorage
-    saveToLocalStorage('allChartData', allChartData);
+    // Save to PouchDB
+    await saveChartDataPouchDB();
 
     // Update display with current filter
     updateChartDisplay();
@@ -883,8 +995,12 @@ function logout() {
 }
 
 // ===== Initialization =====
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
     console.log('App loaded. Chart.js available:', typeof Chart !== 'undefined');
+    
+    // Load data from PouchDB
+    notifications = await loadNotificationsPouchDB();
+    allChartData = await loadChartDataPouchDB();
     
     // Restore dark mode preference
     const savedDarkMode = loadFromLocalStorage('darkMode', false);
@@ -900,10 +1016,10 @@ window.addEventListener("load", () => {
     displayNotifications();
     updateNotificationBadge();
     
-    // Log localStorage stats
+    // Log PouchDB stats
     const chartPoints = allChartData.length;
     const notifCount = notifications.length;
-    console.log(`Restored from localStorage: ${chartPoints} chart points, ${notifCount} notifications`);
+    console.log(`Restored from PouchDB: ${chartPoints} chart points, ${notifCount} notifications`);
     
     // Initialize charts immediately
     if (typeof Chart !== 'undefined') {
