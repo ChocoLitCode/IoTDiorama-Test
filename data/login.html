@@ -161,13 +161,60 @@
   <script>
     const USERNAME = "admin";
     const PASSWORD = "1234";
+    let authDB = null;
 
-    function login(){
+    // Initialize IndexedDB for auth
+    function initAuthDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('IoTDioramaDB', 1);
+        
+        request.onerror = () => {
+          console.error('IndexedDB failed to open');
+          reject(request.error);
+        };
+        
+        request.onsuccess = () => {
+          authDB = request.result;
+          resolve(authDB);
+        };
+        
+        request.onupgradeneeded = (event) => {
+          authDB = event.target.result;
+          if (!authDB.objectStoreNames.contains('auth')) {
+            authDB.createObjectStore('auth');
+          }
+        };
+      });
+    }
+
+    // Save auth to IndexedDB
+    async function saveAuthToIndexedDB(username, password) {
+      if (!authDB) await initAuthDB();
+      
+      return new Promise((resolve, reject) => {
+        const transaction = authDB.transaction(['auth'], 'readwrite');
+        const store = transaction.objectStore('auth');
+        store.put({ username: username, password: password }, 'credentials');
+        
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    async function login(){
       const u = document.getElementById("user").value.trim();
       const p = document.getElementById("pass").value.trim();
       if(u === USERNAME && p === PASSWORD){
-        localStorage.setItem("auth","true");
-        window.location.href = "/";
+        try {
+          await initAuthDB();
+          await saveAuthToIndexedDB(u, p);
+          window.location.href = "/";
+        } catch (error) {
+          console.error('Failed to save auth:', error);
+          // Fallback to localStorage if IndexedDB fails
+          localStorage.setItem("auth","true");
+          window.location.href = "/";
+        }
       } else {
         document.getElementById("error").innerText = "Invalid username or password";
       }

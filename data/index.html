@@ -7,10 +7,43 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" sizes= "32x32" href="assets/logo-tab.png">
      <script>
-    /* authentication redirect */
-    if (localStorage.getItem("auth") !== "true") {
-        window.location.href = "login.html";
-    }
+    /* authentication redirect using IndexedDB */
+    (async function checkAuth() {
+      try {
+        const request = indexedDB.open('IoTDioramaDB', 1);
+        request.onsuccess = () => {
+          const db = request.result;
+          const transaction = db.transaction(['auth'], 'readonly');
+          const store = transaction.objectStore('auth');
+          const getRequest = store.get('credentials');
+          
+          getRequest.onsuccess = () => {
+            if (!getRequest.result) {
+              window.location.href = "login.html";
+            }
+          };
+          
+          getRequest.onerror = () => {
+            // Fallback: check localStorage
+            if (localStorage.getItem("auth") !== "true") {
+              window.location.href = "login.html";
+            }
+          };
+        };
+        
+        request.onerror = () => {
+          // Fallback: check localStorage
+          if (localStorage.getItem("auth") !== "true") {
+            window.location.href = "login.html";
+          }
+        };
+      } catch (e) {
+        // Fallback: check localStorage
+        if (localStorage.getItem("auth") !== "true") {
+          window.location.href = "login.html";
+        }
+      }
+    })();
     </script>
 </head>
 
