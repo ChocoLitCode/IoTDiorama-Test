@@ -39,16 +39,20 @@ function initIndexedDB() {
         };
         
         request.onupgradeneeded = (event) => {
+            console.log('IndexedDB upgrade needed. Creating object stores...');
             db = event.target.result;
-            
+
             // Create object stores if they don't exist
             if (!db.objectStoreNames.contains('notifications')) {
+                console.log('Creating object store: notifications');
                 db.createObjectStore('notifications', { keyPath: 'id', autoIncrement: true });
             }
             if (!db.objectStoreNames.contains('chartData')) {
+                console.log('Creating object store: chartData');
                 db.createObjectStore('chartData', { keyPath: 'id', autoIncrement: true });
             }
             if (!db.objectStoreNames.contains('settings')) {
+                console.log('Creating object store: settings');
                 db.createObjectStore('settings');
             }
         };
