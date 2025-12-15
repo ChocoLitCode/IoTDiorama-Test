@@ -58,6 +58,7 @@
 body {
     margin: 0;
     padding: 0;
+    padding-top: 60px; /* Prevent content from being obstructed by the fixed header */
     font-family: 'ShareTech';
     background: var(--bg);
     color: var(--text);
@@ -76,6 +77,11 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .header-title {
@@ -594,7 +600,7 @@ footer {
 /* Dark mode adjustments */
 .dark-mode .wifi-form input {
     background: var(--sensor-bg);
-    color: var(--text);
+    color: #ffffff;
 }
 
 .dark-mode .wifi-close {
