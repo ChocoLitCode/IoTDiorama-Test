@@ -1,112 +1,7 @@
 // ===== PouchDB Setup =====
 const pouchDB = new PouchDB('IoTDioramaDB');
 
-// Save all notifications to PouchDB
-async function saveNotificationsPouchDB() {
-    try {
-        const doc = {
-            _id: 'notifications',
-            data: notifications
-        };
-        
-        // Check if document exists
-        try {
-            const existing = await pouchDB.get('notifications');
-            doc._rev = existing._rev;
-        } catch (e) {
-            // Document doesn't exist, will create new one
-        }
-        
-        await pouchDB.put(doc);
-        console.log('Notifications saved to PouchDB');
-    } catch (e) {
-        console.error('Failed to save notifications to PouchDB:', e);
-    }
-}
-
-// Load all notifications from PouchDB
-async function loadNotificationsPouchDB() {
-    try {
-        const doc = await pouchDB.get('notifications');
-        return doc.data || [];
-    } catch (e) {
-        if (e.status === 404) {
-            console.log('No notifications found in PouchDB');
-            return [];
-        }
-        console.error('Failed to load notifications from PouchDB:', e);
-        return [];
-    }
-}
-
-// Save chart data to PouchDB
-async function saveChartDataPouchDB() {
-    try {
-        const doc = {
-            _id: 'chartData',
-            data: allChartData
-        };
-        
-        // Check if document exists
-        try {
-            const existing = await pouchDB.get('chartData');
-            doc._rev = existing._rev;
-        } catch (e) {
-            // Document doesn't exist, will create new one
-        }
-        
-        await pouchDB.put(doc);
-        console.log('Chart data saved to PouchDB');
-    } catch (e) {
-        console.error('Failed to save chart data to PouchDB:', e);
-    }
-}
-
-// Load chart data from PouchDB
-async function loadChartDataPouchDB() {
-    try {
-        const doc = await pouchDB.get('chartData');
-        return doc.data || [];
-    } catch (e) {
-        if (e.status === 404) {
-            console.log('No chart data found in PouchDB');
-            return [];
-        }
-        console.error('Failed to load chart data from PouchDB:', e);
-        return [];
-    }
-}
-
-// Save authentication to PouchDB
-async function saveAuthPouchDB(username, password) {
-    try {
-        await pouchDB.put({ _id: 'auth', username, password });
-        console.log('Auth saved to PouchDB');
-    } catch (e) {
-        if (e.status === 409) {
-            // Document exists, update
-            const doc = await pouchDB.get('auth');
-            doc.username = username;
-            doc.password = password;
-            await pouchDB.put(doc);
-            console.log('Auth updated in PouchDB');
-        } else {
-            console.error('Failed to save auth to PouchDB:', e);
-        }
-    }
-}
-
-// Load authentication from PouchDB
-async function loadAuthPouchDB() {
-    try {
-        return await pouchDB.get('auth');
-    } catch (e) {
-        console.error('Failed to load auth from PouchDB:', e);
-        return null;
-    }
-}
-
-// ===== LocalStorage Functions (for preferences only) =====
+// ===== LocalStorage Functions (for all local data) =====
 function saveToLocalStorage(key, data) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
@@ -191,11 +86,11 @@ const room2StateTxt = document.getElementById("room2State");
 const light2State = document.getElementById("light2State");
 
 // ===== Notification System =====
-let notifications = [];
+let notifications = loadFromLocalStorage('notifications', []);
 let pendingNotifications = [];
 const MAX_NOTIFICATIONS = 20;
 
-async function addNotification(type, message) {
+function addNotification(type, message) {
     const timestamp = new Date().toLocaleString();
     const notification = {
         type: type,
@@ -217,9 +112,7 @@ async function addNotification(type, message) {
     
     displayNotifications();
     updateNotificationBadge();
-    
-    // Save to PouchDB
-    await saveNotificationsPouchDB();
+    saveToLocalStorage('notifications', notifications);
 }
 
 function displayNotifications() {
@@ -291,24 +184,30 @@ function updateNotificationBadge() {
     }
 }
 
-async function clearNotifications() {
+function clearNotifications() {
     notifications = [];
-    
     // Process pending notifications from queue
     while (pendingNotifications.length > 0 && notifications.length < MAX_NOTIFICATIONS) {
         const pending = pendingNotifications.shift();
         notifications.unshift(pending);
     }
-    
     displayNotifications();
     updateNotificationBadge();
-    
-    // Save to PouchDB
-    await saveNotificationsPouchDB();
-    
+    saveToLocalStorage('notifications', notifications);
     if (pendingNotifications.length > 0) {
         alert(`${pendingNotifications.length} notification(s) still queued. Clear again to see more.`);
     }
+}
+
+// ===== Chart Data =====
+let allChartData = loadFromLocalStorage('allChartData', []);
+
+function saveChartDataLocal() {
+    saveToLocalStorage('allChartData', allChartData);
+}
+
+function loadChartDataLocal() {
+    allChartData = loadFromLocalStorage('allChartData', []);
 }
 
 // ===== Chart Variables =====
