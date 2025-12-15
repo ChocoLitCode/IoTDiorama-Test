@@ -1,6 +1,3 @@
-// ===== PouchDB Setup =====
-const pouchDB = new PouchDB('IoTDioramaDB');
-
 // ===== LocalStorage Functions (for all local data) =====
 function saveToLocalStorage(key, data) {
     try {
@@ -213,9 +210,9 @@ function loadChartDataLocal() {
 // ===== Chart Variables =====
 let chartsInitialized = false;
 let combinedChart;
-
+ 
 // Data storage with full timestamps (unlimited)
-let allChartData = [];
+// let allChartData = []; // Removed duplicate declaration
 
 // Filter state
 let currentDateFilter = null; // Specific date string or null for all
@@ -401,9 +398,6 @@ async function updateCharts(temp, humid) {
     // Auto-cleanup: Keep only last 7 days of data
     const sevenDaysAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
     allChartData = allChartData.filter(d => d.timestamp >= sevenDaysAgo);
-
-    // Save to PouchDB
-    await saveChartDataPouchDB();
 
     // Update display with current filter
     updateChartDisplay();
