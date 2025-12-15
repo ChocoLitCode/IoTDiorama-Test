@@ -7,34 +7,10 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" sizes= "32x32" href="assets/logo-tab.png">
      <script>
-    /* authentication redirect using IndexedDB */
-    (async function checkAuth() {
-      try {
-        const request = indexedDB.open('IoTDioramaDB', 1);
-        request.onsuccess = () => {
-          const db = request.result;
-          const transaction = db.transaction(['auth'], 'readonly');
-          const store = transaction.objectStore('auth');
-          const getRequest = store.get('credentials');
-          
-          getRequest.onsuccess = () => {
-            if (!getRequest.result) {
-              window.location.href = "login.html";
-            }
-          };
-          
-          getRequest.onerror = () => {
-            window.location.href = "login.html";
-          };
-        };
-        
-        request.onerror = () => {
-          window.location.href = "login.html";
-        };
-      } catch (e) {
+    /* authentication redirect */
+    if (localStorage.getItem("auth") !== "true") {
         window.location.href = "login.html";
-      }
-    })();
+    }
     </script>
 </head>
 
@@ -196,7 +172,7 @@
 <div id="notifPanel" class="notif-panel">
     <div class="notif-header">
         <h2>Notifications</h2>
-            <div class="notif-actions">
+        <div>
             <button id="clearNotif" class="notif-clear">Clear</button>
             <button id="notifClose" class="notif-close">X</button>
         </div>
@@ -236,18 +212,13 @@
 
     <!-- Combined Chart with Navigation -->
     <div class="chart-container">
+        <button class="chart-nav-btn chart-nav-left" id="navPrev">&lt;</button>
         <div class="chart-wrapper">
-
-            <div class="graph-box-title graph-title-nav">
-                <button class="chart-nav-btn nav-inline" id="navPrev">&lt;</button>
-                <span>Temperature & Humidity</span>
-                <button class="chart-nav-btn nav-inline" id="navNext">&gt;</button>
-            </div>
-
+            <div class="graph-box-title">Temperature & Humidity</div>
             <canvas id="combinedChart"></canvas>
         </div>
+        <button class="chart-nav-btn chart-nav-right" id="navNext">&gt;</button>
     </div>
-
 </div>
 
 
@@ -257,19 +228,17 @@
 
     <div id="infoPanel" class="info-panel">
         <div class="info-header">
-            <span class="info-title">About</span>
+            <span class="info-title">About Us</span>
             <button class="info-close" onclick="toggleInfoPanel()">X</button>
         </div>
 
         <div class="info-content">
-            <div class="info-box">DomusLink is an IoT-enabled Home System 
-                that integrates an ESP32 microcontroller, sensors, and an 
-                actuator with a real-time, web-based dashboard. This system
-                allows users to monitor and track room conditions (such as 
-                temperature, humidity, sound, and door lock and room lighting 
-                status), control the door lock and room lights, and receive 
-                notifications for failed attempts and intruder alerts through 
-                an intuitive interface.</div>
+            <div class="info-box">Trichelle Josol</div>
+            <div class="info-box">Ken Nathaneil Almeda</div>
+            <div class="info-box">Jerick Janaban</div>
+            <div class="info-box">Cathlea Talagon</div>
+            <div class="info-box">Kenneth Pagarigan</div>
+            <div class="info-box">Justin Salivio</div>
         </div>
     </div>
 </footer>

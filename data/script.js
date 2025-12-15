@@ -1,4 +1,4 @@
-// ===== LocalStorage Functions (for simple data like darkMode) =====
+// ===== LocalStorage Functions =====
 function saveToLocalStorage(key, data) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
@@ -15,96 +15,6 @@ function loadFromLocalStorage(key, defaultValue) {
         console.warn('localStorage load failed:', e);
         return defaultValue;
     }
-}
-
-// ===== IndexedDB Functions (for large data like notifications and chartData) =====
-let db = null;
-const DB_NAME = 'IoTDioramaDB';
-const DB_VERSION = 1;
-
-// Initialize IndexedDB
-function initIndexedDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        
-        request.onerror = () => {
-            console.error('IndexedDB failed to open');
-            reject(request.error);
-        };
-        
-        request.onsuccess = () => {
-            db = request.result;
-            console.log('IndexedDB opened successfully');
-            resolve(db);
-        };
-        
-        request.onupgradeneeded = (event) => {
-            console.log('IndexedDB upgrade needed. Creating object stores...');
-            db = event.target.result;
-
-            // Create object stores if they don't exist
-            if (!db.objectStoreNames.contains('notifications')) {
-                console.log('Creating object store: notifications');
-                db.createObjectStore('notifications', { keyPath: 'id', autoIncrement: true });
-            }
-            if (!db.objectStoreNames.contains('chartData')) {
-                console.log('Creating object store: chartData');
-                db.createObjectStore('chartData', { keyPath: 'id', autoIncrement: true });
-            }
-            if (!db.objectStoreNames.contains('settings')) {
-                console.log('Creating object store: settings');
-                db.createObjectStore('settings');
-            }
-        };
-    });
-}
-
-// Save data to IndexedDB
-async function saveToIndexedDB(storeName, data) {
-    if (!db) await initIndexedDB();
-    
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([storeName], 'readwrite');
-        const store = transaction.objectStore(storeName);
-        
-        // Clear existing data first
-        const clearRequest = store.clear();
-        
-        clearRequest.onsuccess = () => {
-            // Add new data
-            if (Array.isArray(data)) {
-                data.forEach(item => store.add(item));
-            } else {
-                store.add(data);
-            }
-        };
-        
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => {
-            console.warn(`IndexedDB save failed for ${storeName}:`, transaction.error);
-            reject(transaction.error);
-        };
-    });
-}
-
-// Load data from IndexedDB
-async function loadFromIndexedDB(storeName) {
-    if (!db) await initIndexedDB();
-    
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([storeName], 'readonly');
-        const store = transaction.objectStore(storeName);
-        const request = store.getAll();
-        
-        request.onsuccess = () => {
-            resolve(request.result || []);
-        };
-        
-        request.onerror = () => {
-            console.warn(`IndexedDB load failed for ${storeName}:`, request.error);
-            reject(request.error);
-        };
-    });
 }
 
 // Dark mode toggle with persistence
@@ -173,7 +83,7 @@ const room2StateTxt = document.getElementById("room2State");
 const light2State = document.getElementById("light2State");
 
 // ===== Notification System =====
-let notifications = [];
+let notifications = loadFromLocalStorage('notifications', []);
 let pendingNotifications = [];
 const MAX_NOTIFICATIONS = 20;
 
@@ -199,7 +109,7 @@ function addNotification(type, message) {
     
     displayNotifications();
     updateNotificationBadge();
-    saveToIndexedDB('notifications', notifications).catch(e => console.error('Failed to save notifications:', e));
+    saveToLocalStorage('notifications', notifications);
 }
 
 function displayNotifications() {
@@ -282,7 +192,7 @@ function clearNotifications() {
     
     displayNotifications();
     updateNotificationBadge();
-    saveToIndexedDB('notifications', notifications).catch(e => console.error('Failed to save notifications:', e));
+    saveToLocalStorage('notifications', notifications);
     
     if (pendingNotifications.length > 0) {
         alert(`${pendingNotifications.length} notification(s) still queued. Clear again to see more.`);
@@ -294,7 +204,7 @@ let chartsInitialized = false;
 let combinedChart;
 
 // Data storage with full timestamps (unlimited)
-let allChartData = [];
+let allChartData = loadFromLocalStorage('allChartData', []);
 
 // Filter state
 let currentDateFilter = null; // Specific date string or null for all
@@ -481,8 +391,8 @@ function updateCharts(temp, humid) {
     const sevenDaysAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
     allChartData = allChartData.filter(d => d.timestamp >= sevenDaysAgo);
 
-    // Save to IndexedDB
-    saveToIndexedDB('chartData', allChartData).catch(e => console.error('Failed to save chart data:', e));
+    // Save to localStorage
+    saveToLocalStorage('allChartData', allChartData);
 
     // Update display with current filter
     updateChartDisplay();
@@ -960,50 +870,23 @@ function toggleInfoPanel() {
 }
 
 // ===== Logout Function =====
-async function logout() {
+function logout() {
     // Confirm before logging out
     if (confirm('Are you sure you want to logout?')) {
-        try {
-            // Clear auth from IndexedDB
-            if (db) {
-                const transaction = db.transaction(['auth'], 'readwrite');
-                const store = transaction.objectStore('auth');
-                store.clear();
-            }
-        } catch (e) {
-            console.error('Failed to clear auth from IndexedDB:', e);
-        }
+        // Clear authentication
+        localStorage.removeItem('auth');
+        // Optionally clear all data
+        // localStorage.clear();
         // Redirect to login page
         window.location.href = 'login.html';
     }
 }
 
 // ===== Initialization =====
-window.addEventListener("load", async () => {
+window.addEventListener("load", () => {
     console.log('App loaded. Chart.js available:', typeof Chart !== 'undefined');
     
-    // Initialize IndexedDB first
-    try {
-        await initIndexedDB();
-        console.log('IndexedDB initialized');
-        
-        // Load notifications from IndexedDB
-        notifications = await loadFromIndexedDB('notifications');
-        console.log(`Loaded ${notifications.length} notifications from IndexedDB`);
-        
-        // Load chart data from IndexedDB
-        allChartData = await loadFromIndexedDB('chartData');
-        console.log(`Loaded ${allChartData.length} chart data points from IndexedDB`);
-        
-        // Display saved notifications
-        displayNotifications();
-        updateNotificationBadge();
-    } catch (error) {
-        console.error('IndexedDB initialization failed:', error);
-        alert('Database initialization failed. Please refresh the page.');
-    }
-    
-    // Restore dark mode preference (still using localStorage)
+    // Restore dark mode preference
     const savedDarkMode = loadFromLocalStorage('darkMode', false);
     if (savedDarkMode) {
         document.body.classList.add('dark-mode');
@@ -1013,10 +896,14 @@ window.addEventListener("load", async () => {
     updateHeaderDateTime();
     setInterval(updateHeaderDateTime, 1000); // Update every second
     
-    // Log stats
+    // Display saved notifications
+    displayNotifications();
+    updateNotificationBadge();
+    
+    // Log localStorage stats
     const chartPoints = allChartData.length;
     const notifCount = notifications.length;
-    console.log(`Restored from IndexedDB: ${chartPoints} chart points, ${notifCount} notifications`);
+    console.log(`Restored from localStorage: ${chartPoints} chart points, ${notifCount} notifications`);
     
     // Initialize charts immediately
     if (typeof Chart !== 'undefined') {
