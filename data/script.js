@@ -890,10 +890,7 @@ function logout() {
 // ===== Initialization =====
 window.addEventListener("load", async () => {
     console.log('App loaded. Chart.js available:', typeof Chart !== 'undefined');
-    
-    // Load data from PouchDB
-    notifications = await loadNotificationsPouchDB();
-    allChartData = await loadChartDataPouchDB();
+   
     
     // Restore dark mode preference
     const savedDarkMode = loadFromLocalStorage('darkMode', false);
