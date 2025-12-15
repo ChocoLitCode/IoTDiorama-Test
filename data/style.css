@@ -469,7 +469,6 @@ footer {
 }
 .dark-mode .notif-clear {
     background: #ffffff;
-    color: #000000;
     border-color: var(--text);
 }
 
