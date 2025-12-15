@@ -93,7 +93,7 @@ header {
 .header-right {
     display: flex;
     gap: 12px;
-    padding-right: 25px;
+    padding-right: 50px;
 }
 
 .header-btn {
@@ -940,7 +940,7 @@ footer {
 
     .header-right {
         gap: 8px;
-        padding-right: 5px;
+        padding-right: 30px;
     }
 
     .header-btn {
