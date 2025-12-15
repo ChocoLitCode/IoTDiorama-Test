@@ -205,7 +205,7 @@
 <div id="notifPanel" class="notif-panel">
     <div class="notif-header">
         <h2>Notifications</h2>
-        <div>
+            <div class="notif-actions">
             <button id="clearNotif" class="notif-clear">Clear</button>
             <button id="notifClose" class="notif-close">X</button>
         </div>
@@ -245,13 +245,18 @@
 
     <!-- Combined Chart with Navigation -->
     <div class="chart-container">
-        <button class="chart-nav-btn chart-nav-left" id="navPrev">&lt;</button>
         <div class="chart-wrapper">
-            <div class="graph-box-title">Temperature & Humidity</div>
+
+            <div class="graph-box-title graph-title-nav">
+                <button class="chart-nav-btn nav-inline" id="navPrev">&lt;</button>
+                <span>Temperature & Humidity</span>
+                <button class="chart-nav-btn nav-inline" id="navNext">&gt;</button>
+            </div>
+
             <canvas id="combinedChart"></canvas>
         </div>
-        <button class="chart-nav-btn chart-nav-right" id="navNext">&gt;</button>
     </div>
+
 </div>
 
 
@@ -261,17 +266,19 @@
 
     <div id="infoPanel" class="info-panel">
         <div class="info-header">
-            <span class="info-title">About Us</span>
+            <span class="info-title">About</span>
             <button class="info-close" onclick="toggleInfoPanel()">X</button>
         </div>
 
         <div class="info-content">
-            <div class="info-box">Trichelle Josol</div>
-            <div class="info-box">Ken Nathaneil Almeda</div>
-            <div class="info-box">Jerick Janaban</div>
-            <div class="info-box">Cathlea Talagon</div>
-            <div class="info-box">Kenneth Pagarigan</div>
-            <div class="info-box">Justin Salivio</div>
+            <div class="info-box">DomusLink is an IoT-enabled Home System 
+                that integrates an ESP32 microcontroller, sensors, and an 
+                actuator with a real-time, web-based dashboard. This system
+                allows users to monitor and track room conditions (such as 
+                temperature, humidity, sound, and door lock and room lighting 
+                status), control the door lock and room lights, and receive 
+                notifications for failed attempts and intruder alerts through 
+                an intuitive interface.</div>
         </div>
     </div>
 </footer>

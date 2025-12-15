@@ -363,6 +363,12 @@ footer {
 }
 
 /* NOTIFICATION PANEL */
+.notif-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
 .notif-panel {
     position: fixed;
     top: 0;
@@ -416,6 +422,17 @@ footer {
     margin-bottom: 4px;
 }
 
+.notif-close {
+    background: #ffffff;
+    border: 2px solid var(--text);
+    border-radius: 10px;
+    padding: 3px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
 .notif-time {
     font-size: 11px;
     opacity: 0.7;
@@ -443,6 +460,16 @@ footer {
 
 .dark-mode .notif-success {
     border-left-color: #69f0ae;
+}
+.dark-mode .notif-clear {
+    background: #ffffff;
+    color: #000000;
+    border-color: var(--text);
+}
+
+.dark-mode .notif-clear:hover {
+    background: #f0f0f0;
+    color: #000000;
 }
 
 /* NOTIFICATION BADGE */
@@ -486,6 +513,31 @@ footer {
     z-index: 99999;
 }
 .graph-panel.open { transform: translateX(0); }
+
+.graph-title-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    background: var(--sensor-bg);
+    border: 2px solid var(--text);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+
+.graph-title-nav span {
+    flex: 1;
+    text-align: center;
+}
+
+.nav-inline {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
 
 .graph-title {
     font-size: 22px;
@@ -698,8 +750,8 @@ footer {
 }
 
 .chart-nav-btn {
-    width: 50px;
-    height: 50px;
+    width: 34px;
+    height: 34px;
     border: 2px solid var(--text);
     background: var(--card-bg);
     color: var(--text);
@@ -939,6 +991,15 @@ footer {
         max-width: 100%;
     }
 
+    .control-card,
+    .sensor-card,
+    .status-panel {
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+
     /* Controls grid */
     .controls-grid {
         grid-template-columns: 1fr;
@@ -968,15 +1029,15 @@ footer {
         flex-direction: column;
         align-items: center;
         gap: 30px;
-        width: auto;
+        width: 100%;
         padding: 0 10px;
     }
 
     .sensor-card {
-        width: auto;
-        max-width: none;
         height: auto;
         padding: 20px;
+        width: 100%;
+        max-width: 340px;
     }
 
     .sensor-label {
@@ -987,15 +1048,12 @@ footer {
     .sensor-display {
         width: 100%;
         min-height: 140px;
-        height: auto;
         margin-top: 15px;
         font-size: 36px;
     }
 
     /* Status panel */
     .status-panel {
-        width: auto;
-        max-width: none;
         margin: 0 auto;
         padding: 20px;
     }
@@ -1045,6 +1103,12 @@ footer {
         height: 40px;
         margin: 5px auto;
         flex-shrink: 1;
+    }
+
+    .nav-inline {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
     }
 
     /* Graph filters */
