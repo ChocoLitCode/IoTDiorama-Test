@@ -363,6 +363,12 @@ footer {
 }
 
 /* NOTIFICATION PANEL */
+.notif-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .notif-panel {
     position: fixed;
     top: 0;
@@ -454,6 +460,16 @@ footer {
 
 .dark-mode .notif-success {
     border-left-color: #69f0ae;
+}
+.dark-mode .notif-clear {
+    background: #ffffff;
+    color: #000000;
+    border-color: #000000;
+}
+
+.dark-mode .notif-clear:hover {
+    background: #f0f0f0;
+    color: #000000;
 }
 
 /* NOTIFICATION BADGE */
@@ -988,13 +1004,15 @@ footer {
         flex-direction: column;
         align-items: center;
         gap: 30px;
-        width: auto;
+        width: 100%;
         padding: 0 10px;
     }
 
     .sensor-card {
         height: auto;
         padding: 20px;
+        width: 100%;
+        max-width: 340px;
     }
 
     .sensor-label {
