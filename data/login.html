@@ -211,9 +211,7 @@
           window.location.href = "/";
         } catch (error) {
           console.error('Failed to save auth:', error);
-          // Fallback to localStorage if IndexedDB fails
-          localStorage.setItem("auth","true");
-          window.location.href = "/";
+          alert('Authentication failed. Please try again.');
         }
       } else {
         document.getElementById("error").innerText = "Invalid username or password";

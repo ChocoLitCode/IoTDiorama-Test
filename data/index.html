@@ -24,24 +24,15 @@
           };
           
           getRequest.onerror = () => {
-            // Fallback: check localStorage
-            if (localStorage.getItem("auth") !== "true") {
-              window.location.href = "login.html";
-            }
+            window.location.href = "login.html";
           };
         };
         
         request.onerror = () => {
-          // Fallback: check localStorage
-          if (localStorage.getItem("auth") !== "true") {
-            window.location.href = "login.html";
-          }
+          window.location.href = "login.html";
         };
       } catch (e) {
-        // Fallback: check localStorage
-        if (localStorage.getItem("auth") !== "true") {
-          window.location.href = "login.html";
-        }
+        window.location.href = "login.html";
       }
     })();
     </script>

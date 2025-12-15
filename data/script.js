@@ -969,8 +969,6 @@ async function logout() {
         } catch (e) {
             console.error('Failed to clear auth from IndexedDB:', e);
         }
-        // Also clear from localStorage for fallback
-        localStorage.removeItem('auth');
         // Redirect to login page
         window.location.href = 'login.html';
     }
@@ -998,24 +996,7 @@ window.addEventListener("load", async () => {
         updateNotificationBadge();
     } catch (error) {
         console.error('IndexedDB initialization failed:', error);
-        // Fallback: try to migrate from localStorage
-        const oldNotifications = loadFromLocalStorage('notifications', []);
-        const oldChartData = loadFromLocalStorage('allChartData', []);
-        if (oldNotifications.length > 0 || oldChartData.length > 0) {
-            console.log('Migrating data from localStorage to IndexedDB...');
-            notifications = oldNotifications;
-            allChartData = oldChartData;
-            try {
-                await saveToIndexedDB('notifications', notifications);
-                await saveToIndexedDB('chartData', allChartData);
-                // Clear old localStorage data
-                localStorage.removeItem('notifications');
-                localStorage.removeItem('allChartData');
-                console.log('Migration complete');
-            } catch (e) {
-                console.error('Migration failed:', e);
-            }
-        }
+        alert('Database initialization failed. Please refresh the page.');
     }
     
     // Restore dark mode preference (still using localStorage)
