@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>DomusLink</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" sizes= "32x32" href="/assets/logo-tab.png">
+    <link rel="icon" type="image/png" sizes= "32x32" href="assets/logo-tab.png">
      <script>
     /* authentication redirect */
     if (localStorage.getItem("auth") !== "true") {
@@ -25,7 +25,7 @@
     <div class="header-right">
         <img id="graphToggle" class="header-btn" src="/assets/graph-icon.svg" alt="graph">
         <img id="darkToggle" class="header-btn" src="/assets/dark-icon.svg" alt="dark mode">
-        <img id="notifToggle" class="header-btn" src="/assets/notif-icon.svg" alt="notifications">
+        <img id="notifToggle" class="header-btn" src="/assets/notif-icon.svg" alt="notif">
         <img id="logoutBtn" class="header-btn" src="/assets/logout-icon.svg" alt="logout">
     </div>
 </header>
@@ -36,8 +36,28 @@
     <!-- SENSOR READINGS AND CURRENT STATUS ON TOP -->
     <div class="row two-col">
         
+        <!-- CURRENT STATUS -->
+        <div class="column">
+            <div class="title">Current Status</div>
+
+            <div class="status-panel">
+                <div class="status-grid">
+
+                    <div class="state-box">Door</div>
+                    <div class="state-box inactive" id="doorState">LOCKED</div>
+
+                    <div class="state-box">Light 1</div>
+                    <div class="state-box inactive" id="light1State">Inactive</div>
+
+                    <div class="state-box">Light 2</div>
+                    <div class="state-box inactive" id="light2State">Inactive</div>
+
+                </div>
+            </div>
+        </div>
+
         <!-- SENSOR READINGS -->
-        <div class="column sensor-column">
+        <div class="column">
             <div class="title">Sensor Readings</div>
 
             <div class="sensor-grid-vertical">
@@ -78,26 +98,6 @@
                             Last: <span id="soundTime">--:--:--</span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CURRENT STATUS -->
-        <div class="column status-column">
-            <div class="title">Current Status</div>
-
-            <div class="status-panel">
-                <div class="status-grid">
-
-                    <div class="state-box">Door</div>
-                    <div class="state-box inactive" id="doorState">LOCKED</div>
-
-                    <div class="state-box">Light 1</div>
-                    <div class="state-box inactive" id="light1State">Inactive</div>
-
-                    <div class="state-box">Light 2</div>
-                    <div class="state-box inactive" id="light2State">Inactive</div>
-
                 </div>
             </div>
         </div>
