@@ -416,6 +416,17 @@ footer {
     margin-bottom: 4px;
 }
 
+.notif-close {
+    background: #ffffff;
+    border: 2px solid var(--text);
+    border-radius: 10px;
+    padding: 3px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
 .notif-time {
     font-size: 11px;
     opacity: 0.7;
@@ -939,6 +950,15 @@ footer {
         max-width: 100%;
     }
 
+    .control-card,
+    .sensor-card,
+    .status-panel {
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+
     /* Controls grid */
     .controls-grid {
         grid-template-columns: 1fr;
@@ -973,8 +993,6 @@ footer {
     }
 
     .sensor-card {
-        width: auto;
-        max-width: none;
         height: auto;
         padding: 20px;
     }
@@ -987,15 +1005,12 @@ footer {
     .sensor-display {
         width: 100%;
         min-height: 140px;
-        height: auto;
         margin-top: 15px;
         font-size: 36px;
     }
 
     /* Status panel */
     .status-panel {
-        width: auto;
-        max-width: none;
         margin: 0 auto;
         padding: 20px;
     }
