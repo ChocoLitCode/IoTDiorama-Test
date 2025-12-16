@@ -1,6 +1,11 @@
 #include "roomSystem_3.h"
 #include "lcd.h"
 
+// Pin Declarations
+const int DHT22_PIN = 17;
+const int trig = 19;
+const int echo = 18;
+
 DHT dht22(DHT22_PIN, DHT22);
 
 // Timing for greeting

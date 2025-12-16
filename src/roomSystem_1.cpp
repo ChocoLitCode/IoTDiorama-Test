@@ -1,6 +1,14 @@
 #include "roomSystem_1.h"
 #include "lcd.h"
 
+// Pin Declarations
+const int ldr = 34;
+const int ldrLED1 = 25;
+const int ldrLED2 = 33;
+const int ldrLED3 = 32;
+
+const int ldrThreshold = 4000;
+
 // Manual control
 bool room1_override = false;       // true if web overrides
 bool room1_manualTarget = false;   // manual target ON/OFF

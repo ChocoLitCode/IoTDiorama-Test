@@ -1,6 +1,17 @@
 #include "roomSystem_2.h"
 #include "lcd.h"
 
+// Pin Declarations
+const int sound = 35;   
+const int soundLED = 26;
+
+// Clap detection parameters
+const int CLAP_THRESHOLD = 2500;        // Minimum peak to detect clap
+const int NOISE_FLOOR = 10;            // Background noise level to detect sound
+const int CLAP_TIMEOUT = 50;            // Minimum ms between claps
+const int SAMPLE_WINDOW = 10;           // Number of samples to check for peak
+const int LISTENING_CONSISTENCY = 3;    // Number of consecutive detections needed for "listening"
+
 bool room2_override = false;
 bool room2_state = false;
 bool room2_manualTarget = false;
@@ -12,10 +23,6 @@ int soundState = 0;  // 0 = quiet, 1 = listening
 static int consecutiveSoundDetections = 0;
 static int consecutiveQuietDetections = 0;
 static unsigned long lastSoundCheckTime = 0;
-
-// Extern declarations for global sound detection
-extern bool soundDetected;
-extern unsigned long lastSoundTime;
 
 // Extern for greeting state
 extern bool greetingActive;

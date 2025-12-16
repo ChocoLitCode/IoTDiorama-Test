@@ -3,12 +3,9 @@
 
 #include <DHT.h>
 
-// Pins
-const int DHT22_PIN = 17;
-const int trig = 19;
-const int echo = 18;
-
+// Shared objects (accessed from main.cpp)
 extern DHT dht22;
+extern bool greetingActive;
 
 // Initialize module
 bool setRoomThree();

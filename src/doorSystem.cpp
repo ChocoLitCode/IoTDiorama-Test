@@ -1,8 +1,15 @@
 #include "doorSystem.h"
 
+// Pin Declarations
+const int touch1 = 2;
+const int touch2 = 4;
+const int accessLED = 14;
+const int intruderLED = 27;
+const int buzzer = 16;
+const int servo = 23;
+
 // create servo object to control a servo
 Servo myservo;
-
 
 int failAttempts = 0;
 unsigned long touchStart = 0;
