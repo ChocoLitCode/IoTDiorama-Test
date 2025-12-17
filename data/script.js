@@ -227,19 +227,19 @@ function handleHeatIndexAlert(level, heatIndex) {
     switch(level) {
         case 'caution':
             type = 'heat_caution';
-            message = `⚠️ CAUTION: Heat Index at ${heatIndex}°C (27-32°C) - Fatigue possible with prolonged exposure`;
+            message = ` CAUTION: Heat Index at ${heatIndex}°C (27-32°C) - Fatigue possible with prolonged exposure`;
             break;
         case 'extreme_caution':
             type = 'heat_extreme_caution';
-            message = `🌡️ EXTREME CAUTION: Heat Index at ${heatIndex}°C (33-41°C) - Heat cramps and exhaustion possible`;
+            message = ` EXTREME CAUTION: Heat Index at ${heatIndex}°C (33-41°C) - Heat cramps and exhaustion possible`;
             break;
         case 'danger':
             type = 'heat_danger';
-            message = `🔥 DANGER: Heat Index at ${heatIndex}°C (42-51°C) - Heat stroke likely with continued activity`;
+            message = ` DANGER: Heat Index at ${heatIndex}°C (42-51°C) - Heat stroke likely with continued activity`;
             break;
         case 'extreme_danger':
             type = 'heat_extreme_danger';
-            message = `🔥 EXTREME DANGER: Heat Index at ${heatIndex}°C (52°C+) - Heat stroke imminent!`;
+            message = ` EXTREME DANGER: Heat Index at ${heatIndex}°C (52°C+) - Heat stroke imminent!`;
             break;
     }
     
