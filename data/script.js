@@ -134,6 +134,22 @@ function displayNotifications() {
                 icon = '⚠️';
                 className += ' notif-warning';
                 break;
+            case 'heat_caution':
+                icon = '⚠️';
+                className += ' notif-warning';
+                break;
+            case 'heat_extreme_caution':
+                icon = '🌡️';
+                className += ' notif-danger';
+                break;
+            case 'heat_danger':
+                icon = '🔥';
+                className += ' notif-danger';
+                break;
+            case 'heat_extreme_danger':
+                icon = '🔥';
+                className += ' notif-danger';
+                break;
             default:
                 icon = 'ℹ️';
         }
@@ -196,6 +212,43 @@ function clearNotifications() {
     }
 }
 
+// ===== Heat Index Alert Tracking =====
+let lastHeatIndexLevel = 'none';
+
+function handleHeatIndexAlert(level, heatIndex) {
+    // Only trigger if level changed
+    if (level === lastHeatIndexLevel) return;
+    
+    lastHeatIndexLevel = level;
+    
+    let message = '';
+    let type = '';
+    
+    switch(level) {
+        case 'caution':
+            type = 'heat_caution';
+            message = `⚠️ CAUTION: Heat Index at ${heatIndex}°C (27-32°C) - Fatigue possible with prolonged exposure`;
+            break;
+        case 'extreme_caution':
+            type = 'heat_extreme_caution';
+            message = `🌡️ EXTREME CAUTION: Heat Index at ${heatIndex}°C (33-41°C) - Heat cramps and exhaustion possible`;
+            break;
+        case 'danger':
+            type = 'heat_danger';
+            message = `🔥 DANGER: Heat Index at ${heatIndex}°C (42-51°C) - Heat stroke likely with continued activity`;
+            break;
+        case 'extreme_danger':
+            type = 'heat_extreme_danger';
+            message = `🔥 EXTREME DANGER: Heat Index at ${heatIndex}°C (52°C+) - Heat stroke imminent!`;
+            break;
+    }
+    
+    if (message) {
+        addNotification(type, message);
+        console.log('Heat Index Alert:', level, heatIndex);
+    }
+}
+
 // ===== Chart Data =====
 let allChartData = loadFromLocalStorage('allChartData', []);
 
@@ -211,9 +264,6 @@ function loadChartDataLocal() {
 let chartsInitialized = false;
 let combinedChart;
  
-// Data storage with full timestamps (unlimited)
-// let allChartData = []; // Removed duplicate declaration
-
 // Filter state
 let currentDateFilter = null; // Specific date string or null for all
 let currentTimeFrom = null;
@@ -668,6 +718,11 @@ function onMessage(event) {
             updateCharts(temp, humid);
         }
 
+        // Heat Index Alerts
+        if (data.heatIndexAlert !== undefined && data.heatIndex !== undefined) {
+            handleHeatIndexAlert(data.heatIndexAlert, data.heatIndex);
+        }
+
         // Sound Detection
         if (data.sound !== undefined) {
             updateTimeDisplay(soundTimeElement);
@@ -741,10 +796,6 @@ function onMessage(event) {
         console.error("WS Parse Error:", err);
     }
 }
-
-// Track last temperature notification to prevent spam
-let lastTempNotif = { level: '', time: 0 };
-// Temperature alert feature removed
 
 // Show intruder alert pop-up
 function showIntruderAlert() {
@@ -906,10 +957,10 @@ window.addEventListener("load", async () => {
     displayNotifications();
     updateNotificationBadge();
     
-    // Log PouchDB stats
+    // Log storage stats
     const chartPoints = allChartData.length;
     const notifCount = notifications.length;
-    console.log(`Restored from PouchDB: ${chartPoints} chart points, ${notifCount} notifications`);
+    console.log(`Restored from localStorage: ${chartPoints} chart points, ${notifCount} notifications`);
     
     // Initialize charts immediately
     if (typeof Chart !== 'undefined') {

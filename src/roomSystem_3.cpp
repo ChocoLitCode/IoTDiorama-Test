@@ -18,6 +18,11 @@ bool presenceDetected = false;
 int animationFrame = 0;
 static int selectedMessage = 0; // Store the randomly selected message
 
+// Heat Index Alert System
+unsigned long lastHeatIndexCheck = 0;
+const unsigned long HEAT_INDEX_CHECK_INTERVAL = 60000; // Check every 60 seconds
+String lastHeatIndexLevel = "none";
+
 bool setRoomThree(){
     pinMode(trig, OUTPUT);
     pinMode(echo, INPUT);
@@ -67,10 +72,25 @@ void showGreetingAnimation() {
     }
 }
 
-void startRoomThree(float* temperature, float* humidity, float* distance){
+String checkHeatIndexLevel(float heatIndex) {
+    if(heatIndex >= 52.0) {
+        return "extreme_danger";
+    } else if(heatIndex >= 42.0) {
+        return "danger";
+    } else if(heatIndex >= 33.0) {
+        return "extreme_caution";
+    } else if(heatIndex >= 27.0) {
+        return "caution";
+    }
+    return "none";
+}
+
+void startRoomThree(float* temperature, float* humidity, float* distance, AsyncWebSocket* ws){
     // Read DHT
     getDHT(humidity, temperature);
-
+    // Compute heat index in Celsius (isFahreheit = false)
+    float hic = dht22.computeHeatIndex(*temperature, *humidity, false);
+   
     // Ultrasonic
     digitalWrite(trig, HIGH);
     delayMicroseconds(10);
@@ -85,6 +105,31 @@ void startRoomThree(float* temperature, float* humidity, float* distance){
     }
 
     unsigned long now = millis();
+
+    // ---- HEAT INDEX MONITORING ----
+    if(!isnan(hic) && (now - lastHeatIndexCheck >= HEAT_INDEX_CHECK_INTERVAL)) {
+        lastHeatIndexCheck = now;
+        String currentLevel = checkHeatIndexLevel(hic);
+        
+        // Only send alert if level changed and is not "none"
+        if(currentLevel != lastHeatIndexLevel && currentLevel != "none") {
+            Serial.print("Heat Index Alert: ");
+            Serial.print(hic);
+            Serial.print("°C - Level: ");
+            Serial.println(currentLevel);
+            
+            // Send alert to web interface if websocket provided
+            if(ws != nullptr && ws->count() > 0) {
+                String json = "{\"heatIndexAlert\":\"" + currentLevel + "\",\"heatIndex\":" + String(hic, 1) + "}";
+                ws->textAll(json);
+            }
+            
+            lastHeatIndexLevel = currentLevel;
+        } else if(currentLevel == "none" && lastHeatIndexLevel != "none") {
+            // Heat index returned to safe levels
+            lastHeatIndexLevel = "none";
+        }
+    }
 
     // ---- DETECT PRESENCE ----
     bool detected = (!isnan(*distance) && *distance < 10);

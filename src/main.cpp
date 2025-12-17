@@ -253,7 +253,8 @@ void loop() {
         if(!isnan(h)) humidity = h;
     }
 
-    startRoomThree(&temperature, &humidity, &distance);
+    // Pass WebSocket pointer to Room 3 for heat index alerts
+    startRoomThree(&temperature, &humidity, &distance, &ws);
     startDoor(ws);
     startRoomOne(notifyClients);
     startRoomTwo(notifyClients);
@@ -320,8 +321,6 @@ void loop() {
         soundDetected = false;
         notifyClients(temperature, humidity);  // Broadcast to update badge
     }
-
-  
 
     delay(1);
 }
