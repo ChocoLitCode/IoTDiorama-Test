@@ -183,12 +183,22 @@ void setup() {
 
     // Initialize hardware
     Serial.println("Initializing hardware...");
-    setLCD();
+    if (!setLCD()) {
+        Serial.println("LCD initialization failed!");
+    }
     showLCD();
-    setRoomOne();
-    setRoomTwo();
-    setRoomThree();
-    setDoorPins();
+    if (!setRoomOne()) {
+        Serial.println("Room 1 hardware initialization failed!");
+    }
+    if (!setRoomTwo()) {
+        Serial.println("Room 2 hardware initialization failed!");
+    }
+    if (!setRoomThree()) {
+        Serial.println("Room 3 hardware initialization failed!");
+    }
+    if (!setDoorPins()) {
+        Serial.println("Door system hardware initialization failed!");
+    }
     Serial.println("Hardware initialized");
 
     if(!LittleFS.begin()) {

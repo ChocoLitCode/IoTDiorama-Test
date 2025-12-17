@@ -27,7 +27,7 @@ static unsigned long lastSoundCheckTime = 0;
 // Extern for greeting state
 extern bool greetingActive;
 
-void setRoomTwo() {
+bool setRoomTwo() {
     pinMode(sound, INPUT);
     pinMode(soundLED, OUTPUT);
     digitalWrite(soundLED, LOW);
@@ -40,6 +40,8 @@ void setRoomTwo() {
         delay(10);
     }
     baseline = sum / 100;
+
+    return true;
 }
 
 bool detectClap() {
@@ -111,8 +113,6 @@ bool detectClap() {
             // Update global sound detection
             soundDetected = true;
             lastSoundTime = now;
-            
-            Serial.println(">>> CLAP DETECTED <<<");
         }
     }
     

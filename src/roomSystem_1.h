@@ -7,7 +7,7 @@ extern bool room1_state;      // actual LED state
 extern bool room1_manualTarget;   // desired state: true=ON, false=OFF
 
 
-void setRoomOne();
+bool setRoomOne();
 void startRoomOne(void (*notify)(float,float));
 
 #endif

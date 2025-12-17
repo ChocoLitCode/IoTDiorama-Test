@@ -113,10 +113,6 @@ void startRoomThree(float* temperature, float* humidity, float* distance, AsyncW
         
         // Only send alert if level changed and is not "none"
         if(currentLevel != lastHeatIndexLevel && currentLevel != "none") {
-            Serial.print("Heat Index Alert: ");
-            Serial.print(hic);
-            Serial.print("°C - Level: ");
-            Serial.println(currentLevel);
             
             // Send alert to web interface if websocket provided
             if(ws != nullptr && ws->count() > 0) {
@@ -136,19 +132,14 @@ void startRoomThree(float* temperature, float* humidity, float* distance, AsyncW
 
     // Only trigger greeting if not already active and presence newly detected
     if(detected && !presenceDetected && !greetingActive){
-        Serial.println(">>> GREETING TRIGGERED <<<");
         
         // Select message based on temp conditions
         if(*temperature >= 32.0) {
             selectedMessage = 5;
-            Serial.println("Selected message: Hot");
         } else if(*temperature < 22.0) {
             selectedMessage = 6;
-            Serial.println("Selected message: Cold");
         } else {
             selectedMessage = random(0, 5);
-            Serial.print("Selected message: ");
-            Serial.println(selectedMessage);
         }
         
         // Clear and display greeting message once

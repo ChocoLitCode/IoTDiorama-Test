@@ -23,7 +23,7 @@ static bool turningOn = false;
 // Extern for greeting state
 extern bool greetingActive;
 
-void setRoomOne() {
+bool setRoomOne() {
     pinMode(ldr, INPUT);
     pinMode(ldrLED1, OUTPUT);
     pinMode(ldrLED2, OUTPUT);
@@ -32,6 +32,8 @@ void setRoomOne() {
     digitalWrite(ldrLED1, LOW);
     digitalWrite(ldrLED2, LOW);
     digitalWrite(ldrLED3, LOW);
+
+    return true;
 }
 
 void startRoomOne(void (*notify)(float,float)) {

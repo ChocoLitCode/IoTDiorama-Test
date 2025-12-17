@@ -21,7 +21,7 @@ static unsigned long ledTimerStart = 0;
 static bool ledTimerActive = false;
 const unsigned long LED_TIMEOUT = 5000;  // 5 seconds
 
-void setDoorPins() {
+bool setDoorPins() {
     pinMode(touch1, INPUT);
     pinMode(touch2, INPUT);
     pinMode(accessLED, OUTPUT);
@@ -37,6 +37,7 @@ void setDoorPins() {
   myservo.attach(servo,500,2400); // attaches the servo on pin 23 to the servo object
     myservo.write(90); // Initial position
     Serial.println("Door System Ready");
+    return true;
 }
 
 // Variables to track touch sensor state for beep feedback

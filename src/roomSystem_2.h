@@ -11,7 +11,7 @@ extern int soundState;  // 0 = quiet, 1 = listening
 
 // Accept a function pointer for notifying clients
 void startRoomTwo(void (*notify)(float, float));
-void setRoomTwo();
+bool setRoomTwo();
 
 
 

@@ -12,7 +12,7 @@ extern bool doorOpen;
 
 
 // Functions
-void setDoorPins();
+bool setDoorPins();
 void startDoor(AsyncWebSocket& ws);
 void unlockDoor(AsyncWebSocket& ws);
 void lockDoor(AsyncWebSocket& ws);
