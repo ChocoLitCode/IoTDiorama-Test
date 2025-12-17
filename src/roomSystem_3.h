@@ -2,6 +2,7 @@
 #define ROOMSYSTEM_3_H
 
 #include <DHT.h>
+#include <ESPAsyncWebServer.h>
 
 // Shared objects (accessed from main.cpp)
 extern DHT dht22;
@@ -14,6 +15,6 @@ bool setRoomThree();
 void getDHT(float* humidity, float* temperature);
 
 // Non-blocking update function
-void startRoomThree(float* temperature, float* humidity, float* distance);
+void startRoomThree(float* temperature, float* humidity, float* distance, AsyncWebSocket* ws);
 
 #endif
