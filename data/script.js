@@ -446,11 +446,12 @@ async function updateCharts(temp, humid) {
     });
 
     // Auto-cleanup: Keep only last 7 days of data
-    const sevenDaysAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
-    allChartData = allChartData.filter(d => d.timestamp >= sevenDaysAgo);
+        const sevenDaysAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
+        allChartData = allChartData.filter(d => d.timestamp >= sevenDaysAgo);
+        saveToLocalStorage('allChartData', allChartData); // Persist filtered data
 
-    // Update display with current filter
-    updateChartDisplay();
+        // Update display with current filter
+        updateChartDisplay();
 }
 
 function getFilteredData() {
