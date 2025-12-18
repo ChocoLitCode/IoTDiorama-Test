@@ -7,6 +7,7 @@ const int accessLED = 14;
 const int intruderLED = 27;
 const int buzzer = 16;
 const int servo = 23;
+const int button = 13;
 
 // create servo object to control a servo
 Servo myservo;
@@ -26,7 +27,8 @@ bool setDoorPins() {
     pinMode(touch2, INPUT);
     pinMode(accessLED, OUTPUT);
     pinMode(intruderLED, OUTPUT);
-    pinMode(buzzer, OUTPUT);
+    pinMode(buzzer, OUTPUT); 
+    pinMode(button, INPUT);
 
     digitalWrite(accessLED, LOW);
     digitalWrite(intruderLED, LOW);
@@ -107,6 +109,20 @@ void startDoor(AsyncWebSocket& ws) {
         digitalWrite(intruderLED, LOW);
         ledTimerActive = false;
     }
+
+        // --- Tactile Button Logic ---
+    static bool lastButtonState = LOW;
+    bool buttonState = digitalRead(button);
+    if (lastButtonState == LOW && buttonState == HIGH) {
+        // Button was just pressed
+        if (doorOpen) {
+            lockDoor(ws);
+        } else {
+            unlockDoor(ws);
+        }
+        delay(250); // Debounce delay
+    }
+    lastButtonState = buttonState;
 
     // Disable touch sensors while LEDs are active (during access granted/denied display)
     if (ledTimerActive) {
