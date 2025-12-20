@@ -128,7 +128,7 @@ void startRoomThree(float* temperature, float* humidity, float* distance, AsyncW
     }
 
     // ---- DETECT PRESENCE ----
-    bool detected = (!isnan(*distance) && *distance < 10);
+    bool detected = (!isnan(*distance) && *distance <= 10);
 
     // Only trigger greeting if not already active and presence newly detected
     if(detected && !presenceDetected && !greetingActive){
