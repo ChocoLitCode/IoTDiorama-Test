@@ -1,61 +1,86 @@
 #include "roomSystem_2.h"
 #include "lcd.h"
 
-// Pin Declarations
-const int sound = 35;   
-const int soundLED = 26;
+const int sound = 35;
+const int led = 26;
 
-// Clap detection parameters
-const int CLAP_THRESHOLD = 2500;        // Minimum peak to detect clap
-const int NOISE_FLOOR = 10;            // Background noise level to detect sound
-const int CLAP_TIMEOUT = 50;            // Minimum ms between claps
-const int SAMPLE_WINDOW = 10;           // Number of samples to check for peak
-const int LISTENING_CONSISTENCY = 3;    // Number of consecutive detections needed for "listening"
+enum Environment { QUIET, NORMAL, NOISY };
+Environment currentEnv = NORMAL;
 
+const int QUIET_THRESHOLD = 20;
+const int NORMAL_THRESHOLD = 35;
+const int NOISY_THRESHOLD = 60;
+const int CLAP_TIMEOUT = 300;
+const int SAMPLE_WINDOW = 10;
+const int NOISE_FLOOR = 10;
+const int LISTENING_CONSISTENCY = 3;
+const int SAMPLE_SIZE = 100;
+const int ADAPTATION_INTERVAL = 30000;
+const int ADAPTATION_SAMPLES = 50;
+
+int baselineSum = 0;
+int sampleCount = 0;
+int dynamicThreshold = NORMAL_THRESHOLD;
+int baselineNoise = 0;
 bool room2_override = false;
 bool room2_state = false;
 bool room2_manualTarget = false;
 
-// Clap detection state
 static unsigned long lastClapTime = 0;
-static int baseline = 0;
-int soundState = 0;  // 0 = quiet, 1 = listening
-static int consecutiveSoundDetections = 0;
-static int consecutiveQuietDetections = 0;
+static unsigned long lastNotifyTime = 0;
+static unsigned long lastAdaptationTime = 0;
 static unsigned long lastSoundCheckTime = 0;
 
-// Extern for greeting state
+int soundState = 0;
+static int consecutiveSoundDetections = 0;
+static int consecutiveQuietDetections = 0;
+static int adaptationSamples[50];
+static int adaptationIndex = 0;
+static bool adaptationReady = false;
+
 extern bool greetingActive;
 
 bool setRoomTwo() {
     pinMode(sound, INPUT);
-    pinMode(soundLED, OUTPUT);
-    digitalWrite(soundLED, LOW);
+    pinMode(led, OUTPUT);
+    digitalWrite(led, LOW);
     
-    // Calibrate baseline noise level
-    Serial.println("Calibrating sound sensor...");
     long sum = 0;
     for(int i = 0; i < 100; i++) {
         sum += analogRead(sound);
         delay(10);
     }
-    baseline = sum / 100;
-
+    baselineNoise = sum / 100;
     return true;
+}
+
+int getCurrentThreshold() {
+    switch(currentEnv) {
+        case QUIET: return QUIET_THRESHOLD;
+        case NOISY: return NOISY_THRESHOLD;
+        default: return NORMAL_THRESHOLD;
+    }
+}
+
+void updateBaseline(int value) {
+    baselineSum += value;
+    sampleCount++;
+    
+    if (sampleCount >= SAMPLE_SIZE) {
+        baselineNoise = baselineSum / SAMPLE_SIZE;
+        int baseThreshold = getCurrentThreshold();
+        dynamicThreshold = baselineNoise + baseThreshold;
+        if (dynamicThreshold < 15) dynamicThreshold = 15;
+        baselineSum = 0;
+        sampleCount = 0;
+    }
 }
 
 bool detectClap() {
     unsigned long now = millis();
+    if (now - lastClapTime < CLAP_TIMEOUT) return false;
     
-    // Debounce: ignore if clap detected recently
-    if (now - lastClapTime < CLAP_TIMEOUT) {
-        return false;
-    }
-    
-    // Take multiple samples to find peak
-    int peak = 0;
-    int valley = 4095;
-    
+    int peak = 0, valley = 4095;
     for(int i = 0; i < SAMPLE_WINDOW; i++) {
         int sample = analogRead(sound);
         if(sample > peak) peak = sample;
@@ -63,99 +88,120 @@ bool detectClap() {
         delayMicroseconds(500);
     }
     
-    // Calculate amplitude (peak-to-peak)
     int amplitude = peak - valley;
     
-    // Track ambient sound for "listening" state with smoothing
-    // Only update state every 500ms to avoid rapid changes
     if(now - lastSoundCheckTime >= 500) {
         lastSoundCheckTime = now;
-       
         
         if(amplitude > NOISE_FLOOR) {
             consecutiveSoundDetections++;
             consecutiveQuietDetections = 0;
-            
-            // Need LISTENING_CONSISTENCY consecutive detections to switch to "listening"
             if(consecutiveSoundDetections >= LISTENING_CONSISTENCY) {
-                if(soundState != 1) {
-                    Serial.println(">>> STATE CHANGED TO LISTENING <<<");
-                }
-                soundState = 1;  // listening
+                soundState = 1;
             }
         } else {
             consecutiveQuietDetections++;
             consecutiveSoundDetections = 0;
-            
-            // Need 10 consecutive quiet readings (5 seconds) to switch to "quiet"
             if(consecutiveQuietDetections >= 10) {
-                if(soundState != 0) {
-                    Serial.println(">>> STATE CHANGED TO QUIET <<<");
-                }
-                soundState = 0;  // quiet
+                soundState = 0;
             }
         }
     }
     
-    // Check if it's a sharp spike above threshold (clap detection)
-    bool isClap = false;
-    
-    if(amplitude > CLAP_THRESHOLD) {
-        // Additional validation: check for quick decay
+    if(amplitude > dynamicThreshold) {
         delay(5);
         int afterPeak = analogRead(sound);
-        
-        // Clap should decay quickly
         if(afterPeak < peak - (amplitude / 2)) {
-            isClap = true;
             lastClapTime = now;
-            
-            // Update global sound detection
-            soundDetected = true;
-            lastSoundTime = now;
+            soundState = 2;
+            return true;
         }
     }
     
-    return isClap;
+    return false;
+}
+
+const char* getSoundStateString() {
+    switch(soundState) {
+        case 0: return "QUIET";
+        case 1: return "LISTENING";
+        case 2: return "ACTIVATED";
+        default: return "UNKNOWN";
+    }
+}
+
+void autoAdaptEnvironment() {
+    unsigned long now = millis();
+    
+    if(adaptationIndex < ADAPTATION_SAMPLES) {
+        adaptationSamples[adaptationIndex++] = analogRead(sound);
+    } else {
+        adaptationReady = true;
+    }
+    
+    if(adaptationReady && (now - lastAdaptationTime >= ADAPTATION_INTERVAL)) {
+        lastAdaptationTime = now;
+        
+        long sum = 0;
+        int maxVal = 0, variance = 0;
+        for(int i = 0; i < ADAPTATION_SAMPLES; i++) {
+            sum += adaptationSamples[i];
+            if(adaptationSamples[i] > maxVal) maxVal = adaptationSamples[i];
+        }
+        
+        int avgNoise = sum / ADAPTATION_SAMPLES;
+        for(int i = 0; i < ADAPTATION_SAMPLES; i++) {
+            int diff = adaptationSamples[i] - avgNoise;
+            variance += (diff * diff);
+        }
+        variance = variance / ADAPTATION_SAMPLES;
+        
+        Environment newEnv = currentEnv;
+        if(avgNoise < 15 && variance < 50) {
+            newEnv = QUIET;
+        } else if(avgNoise > 30 || variance > 200) {
+            newEnv = NOISY;
+        } else {
+            newEnv = NORMAL;
+        }
+        
+        if(newEnv != currentEnv) {
+            currentEnv = newEnv;
+            baselineSum = 0;
+            sampleCount = 0;
+        }
+        
+        adaptationIndex = 0;
+        adaptationReady = false;
+    }
 }
 
 void startRoomTwo(void (*notify)(float,float)) {
     static bool lastState = false;
     static bool lastOverride = false;
-    static unsigned long lastNotifyTime = 0;
     unsigned long now = millis();
-
+    
+    int sensorValue = analogRead(sound);
+    autoAdaptEnvironment();
+    updateBaseline(sensorValue);
+    
     if(room2_override){
-        // Manual override: use manualTarget
         room2_state = room2_manualTarget;
     } else {
-        // Auto mode: detect clap
-        if(lastOverride){
-            // Just switched from override to auto
-            lastClapTime = now;
-        }
-        
-        if(detectClap()) {
-            room2_state = !room2_state; // Toggle on clap
-        }
+        if(lastOverride) lastClapTime = now;
+        if(detectClap()) room2_state = !room2_state;
     }
 
     lastOverride = room2_override;
+    digitalWrite(led, room2_state ? HIGH : LOW);
     
-    // Update hardware
-    digitalWrite(soundLED, room2_state ? HIGH : LOW);
-    
-    // Skip LCD update if greeting is active
     if(!greetingActive) {
         lcd.setCursor(16,1);
         lcd.print(room2_state ? "ON " : "OFF");
     }
 
-    // Notify WebSocket if state changed
     if(room2_state != lastState && now - lastNotifyTime > 200){
-        if(notify != nullptr) {
-            notify(NAN, NAN);
-        }
+        if(notify != nullptr) notify(NAN, NAN);
         lastState = room2_state;
         lastNotifyTime = now;
     }
