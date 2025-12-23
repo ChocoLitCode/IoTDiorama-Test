@@ -721,7 +721,7 @@ function onMessage(event) {
             updateTimeDisplay(soundTimeElement);
             
             if (data.sound === "detected") {
-                soundBadgeElement.textContent = "Activate";
+                soundBadgeElement.textContent = "Activated";
                 soundBadgeElement.className = "sound-badge detected";
             } else if (data.sound === "listening") {
                 soundBadgeElement.textContent = "Listening";
