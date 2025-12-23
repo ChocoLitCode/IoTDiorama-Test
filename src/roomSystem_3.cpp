@@ -106,7 +106,7 @@ void startRoomThree(float* temperature, float* humidity, float* distance, AsyncW
 
     unsigned long now = millis();
 
-    // ---- HEAT INDEX MONITORING ----
+    // Heat Index monitoring
     if(!isnan(hic) && (now - lastHeatIndexCheck >= HEAT_INDEX_CHECK_INTERVAL)) {
         lastHeatIndexCheck = now;
         String currentLevel = checkHeatIndexLevel(hic);
@@ -127,7 +127,7 @@ void startRoomThree(float* temperature, float* humidity, float* distance, AsyncW
         }
     }
 
-    // ---- DETECT PRESENCE ----
+    // Detect Presence
     bool detected = (!isnan(*distance) && *distance <= 10);
 
     // Only trigger greeting if not already active and presence newly detected
@@ -193,7 +193,7 @@ void startRoomThree(float* temperature, float* humidity, float* distance, AsyncW
         presenceDetected = false;
     }
 
-    // ---- SHOW ANIMATED GREETING ----
+    // Show animated greetings
     if(greetingActive) {
         showGreetingAnimation();
         
@@ -207,7 +207,7 @@ void startRoomThree(float* temperature, float* humidity, float* distance, AsyncW
         return; // skip normal LCD updates
     }
 
-    // ---- UPDATE DYNAMIC VALUES ----
+    // Update dynamic values
     if(!isnan(*temperature)){
         lcd.setCursor(6,2);
         lcd.print(*temperature,1);       // 1 decimal

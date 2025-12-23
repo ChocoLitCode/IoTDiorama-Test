@@ -9,35 +9,38 @@
 #include "roomSystem_3.h"
 #include "lcd.h"
 
-// ===== WiFi Credentials (hardcoded) =====
+// WiFi Credentials
 const char* ssid = "DomusLink";
 const char* password = "12345678";
 
-// ===== WiFi Management =====
+// WiFi Management
 bool wifiConnected = false;
 unsigned long lastWiFiCheck = 0;
 const unsigned long WIFI_CHECK_INTERVAL = 10000;
 
-// ===== Server & WebSocket =====
+// Server & WebSocket
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-// ===== Sensor Values =====
+// Sensor Values
 float temperature = NAN;
 float humidity = NAN;
 float distance = NAN;
-bool soundDetected = false;
-unsigned long lastSoundTime = 0;
-const unsigned long LISTENING_TIMEOUT = 5000;  // 5 seconds to transition from listening to quiet
-const unsigned long QUIET_TIMEOUT = 3000;  // Need 3 seconds of consistent sound to show listening
 
-// ===== Timing =====
+// Timing
 unsigned long lastDHTRead = 0;
 const unsigned long DHT_INTERVAL = 5000;
-unsigned long lastBroadcast = 0;
-const unsigned long WS_BROADCAST_INTERVAL = 5000;
 
-// ===== Safe WebSocket Notification =====
+// Helper function to get sound state string
+String getSoundStateString() {
+    if (soundState == 2) {
+        return "\"detected\"";
+    } else {
+        return (soundState == 1) ? "\"listening\"" : "\"quiet\"";
+    }
+}
+
+// Safe WebSocket Notification
 void notifyClients(float temp, float hum) {
     if (!wifiConnected || ws.count() == 0) return;
     
@@ -53,14 +56,6 @@ void notifyClients(float temp, float hum) {
     String room1Mode = room1_override ? "MANUAL" : "AUTO";
     String room2Mode = room2_override ? "MANUAL" : "AUTO";
     String doorStr = doorOpen ? "UNLOCKED" : "LOCKED";
-    
-    // Determine sound state (soundState is declared in roomSystem_2.h)
-    String soundStr;
-    if (soundDetected) {
-        soundStr = "\"detected\"";
-    } else {
-        soundStr = (soundState == 1) ? "\"listening\"" : "\"quiet\"";
-    }
 
     String json = "{";
     json += "\"temperature\":" + tempStr + ",";
@@ -70,21 +65,13 @@ void notifyClients(float temp, float hum) {
     json += "\"room2\":\"" + room2State + "\",";
     json += "\"room2Mode\":\"" + room2Mode + "\",";
     json += "\"door\":\"" + doorStr + "\",";
-    json += "\"sound\":" + soundStr;
+    json += "\"sound\":" + getSoundStateString();
     json += "}";
-
-    // Add debug output
-    Serial.print("Sound state: ");
-    Serial.print(soundState);
-    Serial.print(" | Detected: ");
-    Serial.print(soundDetected);
-    Serial.print(" | Sending: ");
-    Serial.println(soundStr);
 
     ws.textAll(json);
 }
 
-// ===== WebSocket Event Handler =====
+// WebSocket Event Handler
 void onWsEvent(AsyncWebSocket *serverPtr, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
     switch(type){
@@ -152,7 +139,7 @@ void onWsEvent(AsyncWebSocket *serverPtr, AsyncWebSocketClient *client,
     }
 }
 
-// ===== WiFi Management =====
+// WiFi Management
 void initWiFi() {
     WiFi.mode(WIFI_AP);
     WiFi.setSleep(false);
@@ -173,8 +160,6 @@ void initWiFi() {
     }
 }
 
-
-// ===== Setup =====
 void setup() {
     Serial.begin(115200);
     delay(100);
@@ -212,7 +197,7 @@ void setup() {
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
 
-    // ===== Serve Static Files =====
+    // Serve Static Files 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(LittleFS, "/index.html", "text/html");
     });
@@ -250,11 +235,10 @@ void setup() {
     Serial.println("Mode: " + String(wifiConnected ? "ONLINE" : "OFFLINE"));
 }
 
-// ===== Loop =====
 void loop() {
     unsigned long now = millis();
-   
 
+    // Read DHT sensor periodically
     if(now - lastDHTRead >= DHT_INTERVAL){
         lastDHTRead = now;
         float t, h;
@@ -263,73 +247,46 @@ void loop() {
         if(!isnan(h)) humidity = h;
     }
 
-    // Pass WebSocket pointer to Room 3 for heat index alerts
+    // Update all room systems
     startRoomThree(&temperature, &humidity, &distance, &ws);
     startDoor(ws);
     startRoomOne(notifyClients);
     startRoomTwo(notifyClients);
 
-    // Broadcast DHT readings every 5 seconds
-    if(wifiConnected && now - lastBroadcast >= WS_BROADCAST_INTERVAL){
+    // Consolidated broadcast every 500ms - sends all data at once
+    static unsigned long lastBroadcast = 0;
+    if(wifiConnected && now - lastBroadcast >= 500){
         lastBroadcast = now;
         
-        // Only send temperature and humidity data
         String tempStr = isnan(temperature) ? "0" : String(temperature, 1);
         String humStr = isnan(humidity) ? "0" : String(humidity, 1);
-        
-        String json = "{";
-        json += "\"temperature\":" + tempStr + ",";
-        json += "\"humidity\":" + humStr;
-        json += "}";
-        
-        ws.textAll(json);
-    }
-
-    // Broadcast room states more frequently (every 500ms)
-    static unsigned long lastRoomBroadcast = 0;
-    if(wifiConnected && now - lastRoomBroadcast >= 500){
-        lastRoomBroadcast = now;
-        
-        // Always send actual state and mode separately
         String room1State = room1_state ? "ON" : "OFF";
         String room2State = room2_state ? "ON" : "OFF";
         String room1Mode = room1_override ? "MANUAL" : "AUTO";
         String room2Mode = room2_override ? "MANUAL" : "AUTO";
         String doorStr = doorOpen ? "UNLOCKED" : "LOCKED";
         
-        // Add sound state to this broadcast
-        String soundStr;
-        if (soundDetected) {
-            soundStr = "\"detected\"";
-        } else {
-            soundStr = (soundState == 1) ? "\"listening\"" : "\"quiet\"";
-        }
-        
         String json = "{";
+        json += "\"temperature\":" + tempStr + ",";
+        json += "\"humidity\":" + humStr + ",";
         json += "\"room1\":\"" + room1State + "\",";
         json += "\"room1Mode\":\"" + room1Mode + "\",";
         json += "\"room2\":\"" + room2State + "\",";
         json += "\"room2Mode\":\"" + room2Mode + "\",";
         json += "\"door\":\"" + doorStr + "\",";
-        json += "\"sound\":" + soundStr;
+        json += "\"sound\":" + getSoundStateString();
         json += "}";
         
         ws.textAll(json);
     }
 
+    // WebSocket cleanup
     if(wifiConnected) {
         static unsigned long lastCleanup = 0;
         if(now - lastCleanup > 5000){
             lastCleanup = now;
             ws.cleanupClients();
         }
-    }
-
-    // Reset sound detection after 500ms, then broadcast new state
-    static unsigned long lastSoundStateCheck = 0;
-    if(soundDetected && millis() - lastSoundTime >= 500){
-        soundDetected = false;
-        notifyClients(temperature, humidity);  // Broadcast to update badge
     }
 
     delay(1);

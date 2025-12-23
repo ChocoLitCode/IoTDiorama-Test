@@ -72,7 +72,7 @@ void unlockDoor(AsyncWebSocket& ws) {
 
 void intruderAlert(AsyncWebSocket& ws) {
     
-    // Three loud beeps (active buzzer)
+    // Three beeps 
     for (int i = 0; i < 3; i++) { 
         digitalWrite(buzzer, HIGH);
         delay(300);
@@ -110,7 +110,7 @@ void startDoor(AsyncWebSocket& ws) {
         ledTimerActive = false;
     }
 
-        // --- Tactile Button Logic ---
+        // Tactile Button Logic
     static bool lastButtonState = LOW;
     bool buttonState = digitalRead(button);
     if (lastButtonState == LOW && buttonState == HIGH) {
@@ -124,7 +124,7 @@ void startDoor(AsyncWebSocket& ws) {
     }
     lastButtonState = buttonState;
 
-    // Disable touch sensors while LEDs are active (during access granted/denied display)
+    // Disable touch sensors while LEDs are active
     if (ledTimerActive) {
         return;  // Don't process touch sensors while showing result
     }
@@ -133,7 +133,7 @@ void startDoor(AsyncWebSocket& ws) {
     int t2 = digitalRead(touch2);
     bool bothTouched = (t1 == HIGH && t2 == HIGH);
 
-    // Short beep when touch sensor is activated (like phone keypad)
+    // Short beep when touch sensor is activated 
     if (t1 == HIGH && !touch1WasHigh) {
         digitalWrite(buzzer, HIGH);
         delay(50);  // Very short beep

@@ -1,36 +1,42 @@
 #include "roomSystem_2.h"
 #include "lcd.h"
 
-const int sound = 35;
-const int led = 26;
+// Pin declarations
+const int sound = 35; 
+const int led = 26;  
 
+// Environment noise level states
 enum Environment { QUIET, NORMAL, NOISY };
 Environment currentEnv = NORMAL;
 
+// Thresholds and timing constants
 const int QUIET_THRESHOLD = 20;
 const int NORMAL_THRESHOLD = 35;
 const int NOISY_THRESHOLD = 60;
-const int CLAP_TIMEOUT = 300;
-const int SAMPLE_WINDOW = 10;
-const int NOISE_FLOOR = 10;
-const int LISTENING_CONSISTENCY = 3;
-const int SAMPLE_SIZE = 100;
-const int ADAPTATION_INTERVAL = 30000;
-const int ADAPTATION_SAMPLES = 50;
+const int CLAP_TIMEOUT = 300;           // ms between valid claps
+const int SAMPLE_WINDOW = 10;           // Number of samples per check
+const int NOISE_FLOOR = 10;             // Minimum amplitude to consider sound
+const int LISTENING_CONSISTENCY = 3;    // Number of consecutive detections for listening
+const int SAMPLE_SIZE = 100;            // For baseline calculation
+const int ADAPTATION_INTERVAL = 30000;  // ms between environment adaptation
+const int ADAPTATION_SAMPLES = 50;      // Samples for adaptation
 
+// Baseline and state variables
 int baselineSum = 0;
 int sampleCount = 0;
 int dynamicThreshold = NORMAL_THRESHOLD;
 int baselineNoise = 0;
-bool room2_override = false;
-bool room2_state = false;
-bool room2_manualTarget = false;
+bool room2_override = false;     // Manual override flag
+bool room2_state = false;        // Current state (ON/OFF)
+bool room2_manualTarget = false; // Target state in manual mode
 
+// Timing variables
 static unsigned long lastClapTime = 0;
 static unsigned long lastNotifyTime = 0;
 static unsigned long lastAdaptationTime = 0;
 static unsigned long lastSoundCheckTime = 0;
 
+// Sound state: 0 = quiet, 1 = listening, 2 = activated
 int soundState = 0;
 static int consecutiveSoundDetections = 0;
 static int consecutiveQuietDetections = 0;
@@ -38,13 +44,16 @@ static int adaptationSamples[50];
 static int adaptationIndex = 0;
 static bool adaptationReady = false;
 
+// External flag for greeting display
 extern bool greetingActive;
 
+// Initialize Room 2 hardware and baseline noise
 bool setRoomTwo() {
     pinMode(sound, INPUT);
     pinMode(led, OUTPUT);
     digitalWrite(led, LOW);
     
+    // Calculate initial baseline noise
     long sum = 0;
     for(int i = 0; i < 100; i++) {
         sum += analogRead(sound);
@@ -54,6 +63,7 @@ bool setRoomTwo() {
     return true;
 }
 
+// Get threshold based on current environment
 int getCurrentThreshold() {
     switch(currentEnv) {
         case QUIET: return QUIET_THRESHOLD;
@@ -62,6 +72,7 @@ int getCurrentThreshold() {
     }
 }
 
+// Update running baseline and dynamic threshold
 void updateBaseline(int value) {
     baselineSum += value;
     sampleCount++;
@@ -76,6 +87,7 @@ void updateBaseline(int value) {
     }
 }
 
+// Detect a clap event based on amplitude and timing
 bool detectClap() {
     unsigned long now = millis();
     if (now - lastClapTime < CLAP_TIMEOUT) return false;
@@ -90,6 +102,7 @@ bool detectClap() {
     
     int amplitude = peak - valley;
     
+    // Update sound state (listening vs quiet)
     if(now - lastSoundCheckTime >= 500) {
         lastSoundCheckTime = now;
         
@@ -108,6 +121,7 @@ bool detectClap() {
         }
     }
     
+    // Detect actual clap
     if(amplitude > dynamicThreshold) {
         delay(5);
         int afterPeak = analogRead(sound);
@@ -121,15 +135,7 @@ bool detectClap() {
     return false;
 }
 
-const char* getSoundStateString() {
-    switch(soundState) {
-        case 0: return "QUIET";
-        case 1: return "LISTENING";
-        case 2: return "ACTIVATED";
-        default: return "UNKNOWN";
-    }
-}
-
+// Automatically adapt environment classification based on noise samples
 void autoAdaptEnvironment() {
     unsigned long now = millis();
     
@@ -185,21 +191,24 @@ void startRoomTwo(void (*notify)(float,float)) {
     autoAdaptEnvironment();
     updateBaseline(sensorValue);
     
+    // Manual override logic
     if(room2_override){
         room2_state = room2_manualTarget;
     } else {
         if(lastOverride) lastClapTime = now;
         if(detectClap()) room2_state = !room2_state;
     }
-
+    
     lastOverride = room2_override;
     digitalWrite(led, room2_state ? HIGH : LOW);
     
+    // Update LCD if not in greeting mode
     if(!greetingActive) {
         lcd.setCursor(16,1);
         lcd.print(room2_state ? "ON " : "OFF");
     }
-
+    
+    // Notify if state changed
     if(room2_state != lastState && now - lastNotifyTime > 200){
         if(notify != nullptr) notify(NAN, NAN);
         lastState = room2_state;

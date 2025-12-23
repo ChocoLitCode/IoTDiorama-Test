@@ -252,14 +252,6 @@ function handleHeatIndexAlert(level, heatIndex) {
 // ===== Chart Data =====
 let allChartData = loadFromLocalStorage('allChartData', []);
 
-function saveChartDataLocal() {
-    saveToLocalStorage('allChartData', allChartData);
-}
-
-function loadChartDataLocal() {
-    allChartData = loadFromLocalStorage('allChartData', []);
-}
-
 // ===== Chart Variables =====
 let chartsInitialized = false;
 let combinedChart;
