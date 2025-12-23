@@ -86,8 +86,7 @@ String checkHeatIndexLevel(float heatIndex) {
 }
 
 void startRoomThree(float* temperature, float* humidity, float* distance, AsyncWebSocket* ws){
-    // Read DHT
-    getDHT(humidity, temperature);
+    // Use provided temperature and humidity (updated every 5s in main.cpp)
     // Compute heat index in Celsius (isFahreheit = false)
     float hic = dht22.computeHeatIndex(*temperature, *humidity, false);
    
