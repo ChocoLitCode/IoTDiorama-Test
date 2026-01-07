@@ -10,12 +10,12 @@ enum Environment { QUIET, NORMAL, NOISY };
 Environment currentEnv = NORMAL;
 
 // Thresholds and timing constants
-const int QUIET_THRESHOLD = 20;
+const int QUIET_THRESHOLD = 10;
 const int NORMAL_THRESHOLD = 35;
 const int NOISY_THRESHOLD = 60;
-const int CLAP_TIMEOUT = 300;           // ms between valid claps
-const int SAMPLE_WINDOW = 10;           // Number of samples per check
-const int NOISE_FLOOR = 10;             // Minimum amplitude to consider sound
+const int CLAP_TIMEOUT = 200;           // ms between valid claps
+const int SAMPLE_WINDOW = 20;           // Number of samples per check
+const int NOISE_FLOOR = 5;             // Minimum amplitude to consider sound
 const int LISTENING_CONSISTENCY = 3;    // Number of consecutive detections for listening
 const int SAMPLE_SIZE = 100;            // For baseline calculation
 const int ADAPTATION_INTERVAL = 30000;  // ms between environment adaptation
@@ -81,7 +81,7 @@ void updateBaseline(int value) {
         baselineNoise = baselineSum / SAMPLE_SIZE;
         int baseThreshold = getCurrentThreshold();
         dynamicThreshold = baselineNoise + baseThreshold;
-        if (dynamicThreshold < 15) dynamicThreshold = 15;
+        if (dynamicThreshold < 8) dynamicThreshold = 8;
         baselineSum = 0;
         sampleCount = 0;
     }
@@ -92,10 +92,13 @@ bool detectClap() {
     unsigned long now = millis();
     if (now - lastClapTime < CLAP_TIMEOUT) return false;
     
-    int peak = 0, valley = 4095;
+    int peak = 0, peakIndex = 0, valley = 2;
     for(int i = 0; i < SAMPLE_WINDOW; i++) {
         int sample = analogRead(sound);
-        if(sample > peak) peak = sample;
+        if(sample > peak) {
+            peak = sample;
+            peakIndex = i;
+        }
         if(sample < valley) valley = sample;
         delayMicroseconds(500);
     }
@@ -103,7 +106,7 @@ bool detectClap() {
     int amplitude = peak - valley;
     
     // Update sound state (listening vs quiet)
-    if(now - lastSoundCheckTime >= 500) {
+    if(now - lastSoundCheckTime >= 250) {
         lastSoundCheckTime = now;
         
         if(amplitude > NOISE_FLOOR) {
@@ -122,7 +125,7 @@ bool detectClap() {
     }
     
     // Detect actual clap
-    if(amplitude > dynamicThreshold) {
+    if(amplitude > dynamicThreshold * 0.35) {
         delay(5);
         int afterPeak = analogRead(sound);
         if(afterPeak < peak - (amplitude / 2)) {
@@ -190,6 +193,7 @@ void startRoomTwo(void (*notify)(float,float)) {
     int sensorValue = analogRead(sound);
     autoAdaptEnvironment();
     updateBaseline(sensorValue);
+    Serial.println(sensorValue);
     
     // Manual override logic
     if(room2_override){

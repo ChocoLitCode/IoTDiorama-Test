@@ -6,11 +6,8 @@ const int touch2 = 4;
 const int accessLED = 14;
 const int intruderLED = 27;
 const int buzzer = 16;
-const int servo = 23;
 const int button = 13;
 
-// create servo object to control a servo
-Servo myservo;
 
 int failAttempts = 0;
 unsigned long touchStart = 0;
@@ -34,10 +31,6 @@ bool setDoorPins() {
     digitalWrite(intruderLED, LOW);
     digitalWrite(buzzer, LOW);
 
-    // Standard 50hz servo
-  myservo.setPeriodHertz(50);
-  myservo.attach(servo,500,2400); // attaches the servo on pin 23 to the servo object
-    myservo.write(90); // Initial position
     Serial.println("Door System Ready");
     return true;
 }
@@ -60,7 +53,7 @@ void unlockDoor(AsyncWebSocket& ws) {
     failAttempts = 0;
     touchStart = 0;
     doorOpen = true;
-    myservo.write(0); // Rotate servo to open position
+
     
     // Start LED timer
     ledTimerStart = millis();
@@ -97,7 +90,7 @@ void lockDoor(AsyncWebSocket& ws) {
     
     
     doorOpen = false;
-    myservo.write(90); // Rotate servo to closed position
+   
     
     ws.textAll("{\"door\":\"LOCKED\"}");
 }

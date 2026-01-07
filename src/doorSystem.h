@@ -2,7 +2,6 @@
 #define DOORSYSTEM_H
 
 #include <Arduino.h>
-#include <ESP32Servo.h>
 #include <ESPAsyncWebServer.h>
 
 // Counters/timers (shared state)
